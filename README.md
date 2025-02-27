@@ -34,6 +34,9 @@ Installing the nodes is pretty straight forward, check out our [Discord server](
 
 4. Search for `comfyui-finegrain` in the search bar and click the `Install` button.
 
+Alternatively, if you load one of the workflows below, you should be able to install the nodes directly
+by clicking the `Install Missing Custom Nodes` button in the Manager's menu.
+
 ### Comfy Registry installation
 
 The nodes are published at https://registry.comfy.org/publishers/finegrain/nodes/comfyui-finegrain.
@@ -48,6 +51,31 @@ comfy node registry-install comfyui-finegrain
 
 The above command should automatically install the nodes' requirements.
 If it somehow doesn't, you can manually install them with:
+
+On Linux:
+```bash
+# ensure you activated the python virtual environment used by ComfyUI
+pip install -r custom_nodes/comfyui-finegrain/requirements.txt
+```
+
+On Windows:
+```shell
+.\python_embeded\Scripts\pip.exe install hatchling
+.\python_embeded\Scripts\pip.exe install -r .\ComfyUI\custom_nodes\comfyui-finegrain\requirements.txt
+```
+
+### Manual installation
+
+The nodes are published at https://registry.comfy.org/publishers/finegrain/nodes/comfyui-finegrain.
+
+1. Clone the repository:
+
+```bash
+cd custom_nodes
+git clone https://github.com/finegrain-ai/comfyui-finegrain.git
+```
+
+2. Install the nodes' requirements:
 
 On Linux:
 ```bash
