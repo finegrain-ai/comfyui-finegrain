@@ -1,0 +1,1 @@
+git+https://github.com/finegrain-ai/finegrain-python@a03cff35d17d5351cb7179cfa71c2e2eb5e7b1ca#subdirectory=finegrain
