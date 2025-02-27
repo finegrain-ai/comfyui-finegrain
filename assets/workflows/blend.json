@@ -35,6 +35,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.15",
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
@@ -79,6 +81,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfyui-finegrain",
+        "ver": "be1ead38b19f5da9cc0e0fe8f670d975bdac9603",
         "Node name for S&R": "Draw Bounding Box"
       },
       "widgets_values": [
@@ -98,7 +102,7 @@
         130
       ],
       "flags": {},
-      "order": 3,
+      "order": 1,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -112,6 +116,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfyui-finegrain",
+        "ver": "be1ead38b19f5da9cc0e0fe8f670d975bdac9603",
         "Node name for S&R": "Finegrain API"
       },
       "widgets_values": [
@@ -144,6 +150,8 @@
       ],
       "outputs": [],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.15",
         "Node name for S&R": "PreviewImage"
       },
       "widgets_values": []
@@ -160,7 +168,7 @@
         340
       ],
       "flags": {},
-      "order": 1,
+      "order": 2,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -182,6 +190,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.15",
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
@@ -236,6 +246,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfyui-finegrain",
+        "ver": "be1ead38b19f5da9cc0e0fe8f670d975bdac9603",
         "Node name for S&R": "Blender"
       },
       "widgets_values": [
@@ -269,6 +281,8 @@
       ],
       "outputs": [],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.15",
         "Node name for S&R": "PreviewImage"
       },
       "widgets_values": []
@@ -305,6 +319,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.15",
         "Node name for S&R": "InvertMask"
       },
       "widgets_values": []
@@ -346,6 +362,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfyui-finegrain",
+        "ver": "be1ead38b19f5da9cc0e0fe8f670d975bdac9603",
         "Node name for S&R": "Apply Transparency Mask to Image"
       },
       "widgets_values": []
@@ -362,7 +380,7 @@
         130
       ],
       "flags": {},
-      "order": 2,
+      "order": 3,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -377,6 +395,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfyui-finegrain",
+        "ver": "be1ead38b19f5da9cc0e0fe8f670d975bdac9603",
         "Node name for S&R": "Bounding Box"
       },
       "widgets_values": [

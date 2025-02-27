@@ -38,6 +38,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.15",
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
@@ -82,6 +84,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfyui-finegrain",
+        "ver": "be1ead38b19f5da9cc0e0fe8f670d975bdac9603",
         "Node name for S&R": "Box"
       },
       "widgets_values": [
@@ -130,6 +134,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfyui-finegrain",
+        "ver": "be1ead38b19f5da9cc0e0fe8f670d975bdac9603",
         "Node name for S&R": "Segment"
       },
       "widgets_values": [
@@ -169,6 +175,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.15",
         "Node name for S&R": "MaskToImage"
       },
       "widgets_values": []
@@ -196,6 +204,8 @@
       ],
       "outputs": [],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.15",
         "Node name for S&R": "PreviewImage"
       },
       "widgets_values": []
@@ -230,6 +240,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfyui-finegrain",
+        "ver": "be1ead38b19f5da9cc0e0fe8f670d975bdac9603",
         "Node name for S&R": "Finegrain API"
       },
       "widgets_values": [
@@ -281,6 +293,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfyui-finegrain",
+        "ver": "be1ead38b19f5da9cc0e0fe8f670d975bdac9603",
         "Node name for S&R": "Recolor"
       },
       "widgets_values": [
@@ -310,6 +324,8 @@
       ],
       "outputs": [],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.15",
         "Node name for S&R": "PreviewImage"
       },
       "widgets_values": []
@@ -347,8 +363,11 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.15",
         "Node name for S&R": "MaskToImage"
-      }
+      },
+      "widgets_values": []
     },
     {
       "id": 109,
@@ -387,6 +406,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfyui-finegrain",
+        "ver": "be1ead38b19f5da9cc0e0fe8f670d975bdac9603",
         "Node name for S&R": "Box"
       },
       "widgets_values": [
@@ -435,6 +456,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfyui-finegrain",
+        "ver": "be1ead38b19f5da9cc0e0fe8f670d975bdac9603",
         "Node name for S&R": "Segment"
       },
       "widgets_values": [
@@ -464,8 +487,11 @@
       ],
       "outputs": [],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.15",
         "Node name for S&R": "PreviewImage"
-      }
+      },
+      "widgets_values": []
     },
     {
       "id": 112,
@@ -504,6 +530,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.15",
         "Node name for S&R": "ImageBlend"
       },
       "widgets_values": [
@@ -543,6 +571,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.15",
         "Node name for S&R": "ImageToMask"
       },
       "widgets_values": [
