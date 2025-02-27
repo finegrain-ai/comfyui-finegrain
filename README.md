@@ -20,9 +20,9 @@ Installing the nodes is pretty straight forward, check out our [Discord server](
 
 ### Requirements
 
-1. Ensure you have **Python 3.12** (or later) installed.
+1. Ensure you have **[Python](https://www.python.org/) 3.12** (or later) installed.
 
-2. Ensure you have Git installed.
+2. Ensure you have [Git](https://git-scm.com/) installed.
 
 ### ComfyUI Manager
 
