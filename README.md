@@ -34,7 +34,7 @@ Installing the nodes is pretty straight forward, check out our [Discord server](
 
 4. Search for `comfyui-finegrain` in the search bar and click the `Install` button.
 
-Alternatively, if you load one of the workflows below, you should be able to install the nodes directly
+Alternatively, if you load one of the [workflows](#workflow-examples) below, you should be able to install the nodes directly
 by clicking the `Install Missing Custom Nodes` button in the Manager's menu.
 
 ### Comfy Registry installation
