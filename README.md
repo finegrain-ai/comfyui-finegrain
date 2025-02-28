@@ -24,7 +24,7 @@ Installing the nodes is pretty straight forward, check out our [Discord server](
 
 2. Ensure you have [Git](https://git-scm.com/) installed.
 
-### ComfyUI Manager
+### ComfyUI Manager installation
 
 1. Ensure you have [ComfyUI Manager](https://github.com/ltdrdata/ComfyUI-Manager?tab=readme-ov-file#comfyui-manager) installed.
 
