@@ -24,7 +24,7 @@ class Params:
 
 
 async def _process(ctx: EditorAPIContext, params: Params) -> torch.Tensor:
-    assert params.mode in ["express", "standard"], "Invalid mode"
+    assert params.mode in ["standard", "express"], "Invalid mode"
     assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
     assert -360 <= params.rotation_angle <= 360, "Rotation angle must be between -360 and 360"
 
@@ -95,8 +95,8 @@ class Blender:
                 ),
                 "mode": (
                     [
-                        "express",
                         "standard",
+                        "express",
                     ],
                 ),
             },

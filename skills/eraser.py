@@ -23,7 +23,7 @@ async def _process(
     ctx: EditorAPIContext,
     params: Params,
 ) -> torch.Tensor:
-    assert params.mode in ["express", "standard", "premium"], "Invalid mode"
+    assert params.mode in ["premium", "standard", "express"], "Invalid mode"
     assert params.seed >= 0, "Seed must be a non-negative integer"
 
     # convert tensors to PIL images
@@ -85,9 +85,9 @@ class Eraser:
                 ),
                 "mode": (
                     [
-                        "express",
-                        "standard",
                         "premium",
+                        "standard",
+                        "express",
                     ],
                 ),
             },
