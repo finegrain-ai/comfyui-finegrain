@@ -1,4 +1,5 @@
 import io
+import logging
 from typing import Any
 
 from finegrain import EditorAPIContext as _EditorAPIContext
@@ -6,6 +7,7 @@ from finegrain import Priority
 from PIL import Image
 
 StateID = str
+logger = logging.getLogger(__name__)
 
 
 class EditorAPIContext(_EditorAPIContext):
@@ -226,6 +228,20 @@ class API:
     CATEGORY = "Finegrain"
     FUNCTION = "process"
 
+    @staticmethod
+    async def _login(ctx: EditorAPIContext, params: dict[str, Any] | None = None) -> None:
+        try:
+            await ctx.login()
+            logger.info(f"Logged in to {ctx.base_url} as {ctx.user}")
+        except Exception as e:
+            raise RuntimeError(f"Login to {ctx.base_url} failed, check your credentials") from e
+
+    @staticmethod
+    async def _credits(ctx: EditorAPIContext, params: dict[str, Any] | None = None) -> None:
+        response = await ctx.request(method="GET", url="auth/me")
+        infos = response.json()
+        logger.info(f"Remaining credits for {infos['username']}: {infos['credits']}")
+
     def process(
         self,
         username: str,
@@ -233,11 +249,13 @@ class API:
         priority: Priority,
         timeout: int,
     ) -> tuple[EditorAPIContext]:
-        return (
-            EditorAPIContext(
-                user=username,
-                password=password,
-                priority=priority,
-                default_timeout=timeout,
-            ),
+        ctx = EditorAPIContext(
+            user=username,
+            password=password,
+            priority=priority,
+            default_timeout=timeout,
         )
+        ctx.run_one_sync(self._login, None)
+        ctx.run_one_sync(self._credits, None)
+
+        return (ctx,)
