@@ -22,47 +22,6 @@ class Params:
     bbox: BoundingBox | None
 
 
-async def _process(ctx: EditorAPIContext, params: Params) -> torch.Tensor:
-    assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
-    assert params.width >= 8, "Width must be at least 8"
-    assert params.height >= 8, "Height must be at least 8"
-
-    # convert tensors to PIL images
-    cutout_pil = tensor_to_image(params.cutout.permute(0, 3, 1, 2))
-
-    # make some assertions
-    assert cutout_pil.mode == "RGBA", "Cutout must be RGBA"
-
-    # convert PIL images to BytesIO
-    cutout_bytes = image_to_bytes(cutout_pil)
-
-    # queue state/create
-    stateid_cutout = await ctx.create_state(file=cutout_bytes)
-
-    # queue skills/shadow
-    stateid_shadow = await ctx.skill_shadow(
-        stateid_cutout=stateid_cutout,
-        resolution=(params.width, params.height),
-        bbox=params.bbox,
-        seed=params.seed,
-    )
-
-    # queue skills/set-background-color
-    if params.bgcolor and params.bgcolor != "transparent":
-        stateid_shadow = await ctx.skill_set_bgcolor(
-            stateid_image=stateid_shadow,
-            color=params.bgcolor,
-        )
-
-    # queue state/download
-    shadow_pil = await ctx.download_image(stateid_shadow)
-
-    # convert PIL image to tensor
-    shadow_tensor = image_to_tensor(shadow_pil).permute(0, 2, 3, 1)
-
-    return shadow_tensor
-
-
 class Shadow:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
@@ -135,6 +94,47 @@ class Shadow:
     CATEGORY = "Finegrain/skills"
     FUNCTION = "process"
 
+    @staticmethod
+    async def _process(ctx: EditorAPIContext, params: Params) -> torch.Tensor:
+        assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
+        assert params.width >= 8, "Width must be at least 8"
+        assert params.height >= 8, "Height must be at least 8"
+
+        # convert tensors to PIL images
+        cutout_pil = tensor_to_image(params.cutout.permute(0, 3, 1, 2))
+
+        # make some assertions
+        assert cutout_pil.mode == "RGBA", "Cutout must be RGBA"
+
+        # convert PIL images to BytesIO
+        cutout_bytes = image_to_bytes(cutout_pil)
+
+        # queue state/create
+        stateid_cutout = await ctx.create_state(file=cutout_bytes)
+
+        # queue skills/shadow
+        stateid_shadow = await ctx.skill_shadow(
+            stateid_cutout=stateid_cutout,
+            resolution=(params.width, params.height),
+            bbox=params.bbox,
+            seed=params.seed,
+        )
+
+        # queue skills/set-background-color
+        if params.bgcolor and params.bgcolor != "transparent":
+            stateid_shadow = await ctx.skill_set_bgcolor(
+                stateid_image=stateid_shadow,
+                color=params.bgcolor,
+            )
+
+        # queue state/download
+        shadow_pil = await ctx.download_image(stateid_shadow)
+
+        # convert PIL image to tensor
+        shadow_tensor = image_to_tensor(shadow_pil).permute(0, 2, 3, 1)
+
+        return shadow_tensor
+
     def process(
         self,
         api: EditorAPIContext,
@@ -147,7 +147,7 @@ class Shadow:
     ) -> tuple[torch.Tensor]:
         return (
             api.run_one_sync(
-                co=_process,
+                co=self._process,
                 params=Params(
                     cutout=cutout,
                     width=width,

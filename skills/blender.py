@@ -23,47 +23,6 @@ class Params:
     seed: int
 
 
-async def _process(ctx: EditorAPIContext, params: Params) -> torch.Tensor:
-    assert params.mode in ["standard", "express"], "Invalid mode"
-    assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
-    assert -360 <= params.rotation_angle <= 360, "Rotation angle must be between -360 and 360"
-
-    # convert tensors to PIL images
-    scene_pil = tensor_to_image(params.scene.permute(0, 3, 1, 2))
-    cutout_pil = tensor_to_image(params.cutout.permute(0, 3, 1, 2))
-
-    # make some assertions
-    assert scene_pil.mode == "RGB", "Background must be RGB"
-    assert cutout_pil.mode == "RGBA", "Cutout must be RGBA"
-
-    # convert PIL images to BytesIO
-    scene_bytes = image_to_bytes(scene_pil)
-    cutout_bytes = image_to_bytes(cutout_pil)
-
-    # queue state/create
-    stateid_scene = await ctx.create_state(file=scene_bytes)
-    stateid_cutout = await ctx.create_state(file=cutout_bytes)
-
-    # queue skills/erase
-    stateid_erased = await ctx.skill_blend(
-        stateid_scene=stateid_scene,
-        stateid_cutout=stateid_cutout,
-        bbox=params.bbox,
-        flip=params.flip,
-        rotation_angle=params.rotation_angle,
-        mode=params.mode,
-        seed=params.seed,
-    )
-
-    # queue state/download
-    blended_pil = await ctx.download_image(stateid_erased)
-
-    # convert PIL image to tensor
-    blended_tensor = image_to_tensor(blended_pil).permute(0, 2, 3, 1)
-
-    return blended_tensor
-
-
 class Blender:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
@@ -137,6 +96,47 @@ class Blender:
     CATEGORY = "Finegrain/skills"
     FUNCTION = "process"
 
+    @staticmethod
+    async def _process(ctx: EditorAPIContext, params: Params) -> torch.Tensor:
+        assert params.mode in ["standard", "express"], "Invalid mode"
+        assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
+        assert -360 <= params.rotation_angle <= 360, "Rotation angle must be between -360 and 360"
+
+        # convert tensors to PIL images
+        scene_pil = tensor_to_image(params.scene.permute(0, 3, 1, 2))
+        cutout_pil = tensor_to_image(params.cutout.permute(0, 3, 1, 2))
+
+        # make some assertions
+        assert scene_pil.mode == "RGB", "Background must be RGB"
+        assert cutout_pil.mode == "RGBA", "Cutout must be RGBA"
+
+        # convert PIL images to BytesIO
+        scene_bytes = image_to_bytes(scene_pil)
+        cutout_bytes = image_to_bytes(cutout_pil)
+
+        # queue state/create
+        stateid_scene = await ctx.create_state(file=scene_bytes)
+        stateid_cutout = await ctx.create_state(file=cutout_bytes)
+
+        # queue skills/erase
+        stateid_erased = await ctx.skill_blend(
+            stateid_scene=stateid_scene,
+            stateid_cutout=stateid_cutout,
+            bbox=params.bbox,
+            flip=params.flip,
+            rotation_angle=params.rotation_angle,
+            mode=params.mode,
+            seed=params.seed,
+        )
+
+        # queue state/download
+        blended_pil = await ctx.download_image(stateid_erased)
+
+        # convert PIL image to tensor
+        blended_tensor = image_to_tensor(blended_pil).permute(0, 2, 3, 1)
+
+        return blended_tensor
+
     def process(
         self,
         api: EditorAPIContext,
@@ -150,7 +150,7 @@ class Blender:
     ) -> tuple[torch.Tensor]:
         return (
             api.run_one_sync(
-                co=_process,
+                co=self._process,
                 params=Params(
                     scene=scene,
                     cutout=cutout,

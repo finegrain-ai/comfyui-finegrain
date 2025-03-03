@@ -19,43 +19,6 @@ class Params:
     cropped: bool
 
 
-async def _process(
-    ctx: EditorAPIContext,
-    params: Params,
-) -> torch.Tensor:
-    # convert tensors to PIL images
-    image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))
-
-    # make some assertions
-    assert image_pil.mode == "RGB", "Image must be RGB"
-
-    # convert PIL images to BytesIO
-    image_bytes = image_to_bytes(image_pil)
-
-    # queue state/create
-    stateid_image = await ctx.create_state(file=image_bytes)
-
-    # queue skills/infer-bbox
-    stateid_mask = await ctx.skill_segment(
-        stateid_image=stateid_image,
-        bbox=params.bbox,
-    )
-
-    # queue skills/crop
-    if params.cropped:
-        stateid_mask = await ctx.skill_crop(
-            stateid_image=stateid_mask,
-            bbox=params.bbox,
-        )
-
-    # queue state/download
-    mask = await ctx.download_image(stateid_mask)
-
-    # convert PIL image to tensor
-    mask_tensor = image_to_tensor(mask).squeeze(0)
-    return mask_tensor
-
-
 class Segment:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
@@ -99,6 +62,43 @@ class Segment:
     CATEGORY = "Finegrain/skills"
     FUNCTION = "process"
 
+    @staticmethod
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> torch.Tensor:
+        # convert tensors to PIL images
+        image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))
+
+        # make some assertions
+        assert image_pil.mode == "RGB", "Image must be RGB"
+
+        # convert PIL images to BytesIO
+        image_bytes = image_to_bytes(image_pil)
+
+        # queue state/create
+        stateid_image = await ctx.create_state(file=image_bytes)
+
+        # queue skills/infer-bbox
+        stateid_mask = await ctx.skill_segment(
+            stateid_image=stateid_image,
+            bbox=params.bbox,
+        )
+
+        # queue skills/crop
+        if params.cropped:
+            stateid_mask = await ctx.skill_crop(
+                stateid_image=stateid_mask,
+                bbox=params.bbox,
+            )
+
+        # queue state/download
+        mask = await ctx.download_image(stateid_mask)
+
+        # convert PIL image to tensor
+        mask_tensor = image_to_tensor(mask).squeeze(0)
+        return mask_tensor
+
     def process(
         self,
         api: EditorAPIContext,
@@ -108,7 +108,7 @@ class Segment:
     ) -> tuple[torch.Tensor]:
         return (
             api.run_one_sync(
-                co=_process,
+                co=self._process,
                 params=Params(
                     image=image,
                     bbox=bbox,

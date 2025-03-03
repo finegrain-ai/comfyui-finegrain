@@ -22,45 +22,6 @@ class Params:
     seed: int
 
 
-async def _process(ctx: EditorAPIContext, params: Params) -> torch.Tensor:
-    assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
-    assert params.scale_factor in [1, 2, 4], "Scale factor must be 1, 2 or 4"
-    assert 0 <= params.resemblance <= 1.5, "Resemblance must be a float between 0 and 1.5"
-    assert 0.5 <= params.decay <= 1.5, "Decay must be a float between 0.5 and 1.5"
-    assert 0 <= params.creativity <= 1, "Creativity must be a float between 0 and 1"
-
-    # convert tensors to PIL images
-    image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))
-
-    # make some assertions
-    assert image_pil.mode == "RGB", "Image must be RGB"
-
-    # convert PIL images to BytesIO
-    image_bytes = image_to_bytes(image_pil)
-
-    # queue state/create
-    stateid_image = await ctx.create_state(file=image_bytes)
-
-    # queue skills/shadow
-    stateid_shadow = await ctx.skill_upscale(
-        stateid_image=stateid_image,
-        preprocess=params.preprocess,
-        scale_factor=params.scale_factor,
-        resemblance=params.resemblance,
-        decay=params.decay,
-        creativity=params.creativity,
-        seed=params.seed,
-    )
-
-    # queue state/download
-    upscaled_pil = await ctx.download_image(stateid_shadow)
-
-    # convert PIL image to tensor
-    upscaled_tensor = image_to_tensor(upscaled_pil).permute(0, 2, 3, 1)
-
-    return upscaled_tensor
-
-
 class Upscale:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
@@ -135,6 +96,45 @@ class Upscale:
     CATEGORY = "Finegrain/skills"
     FUNCTION = "process"
 
+    @staticmethod
+    async def _process(ctx: EditorAPIContext, params: Params) -> torch.Tensor:
+        assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
+        assert params.scale_factor in [1, 2, 4], "Scale factor must be 1, 2 or 4"
+        assert 0 <= params.resemblance <= 1.5, "Resemblance must be a float between 0 and 1.5"
+        assert 0.5 <= params.decay <= 1.5, "Decay must be a float between 0.5 and 1.5"
+        assert 0 <= params.creativity <= 1, "Creativity must be a float between 0 and 1"
+
+        # convert tensors to PIL images
+        image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))
+
+        # make some assertions
+        assert image_pil.mode == "RGB", "Image must be RGB"
+
+        # convert PIL images to BytesIO
+        image_bytes = image_to_bytes(image_pil)
+
+        # queue state/create
+        stateid_image = await ctx.create_state(file=image_bytes)
+
+        # queue skills/shadow
+        stateid_shadow = await ctx.skill_upscale(
+            stateid_image=stateid_image,
+            preprocess=params.preprocess,
+            scale_factor=params.scale_factor,
+            resemblance=params.resemblance,
+            decay=params.decay,
+            creativity=params.creativity,
+            seed=params.seed,
+        )
+
+        # queue state/download
+        upscaled_pil = await ctx.download_image(stateid_shadow)
+
+        # convert PIL image to tensor
+        upscaled_tensor = image_to_tensor(upscaled_pil).permute(0, 2, 3, 1)
+
+        return upscaled_tensor
+
     def process(
         self,
         api: EditorAPIContext,
@@ -148,7 +148,7 @@ class Upscale:
     ) -> tuple[torch.Tensor]:
         return (
             api.run_one_sync(
-                co=_process,
+                co=self._process,
                 params=Params(
                     image=image,
                     preprocess=preprocess,

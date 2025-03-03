@@ -16,37 +16,6 @@ class Params:
     prompt: str
 
 
-async def _process(
-    ctx: EditorAPIContext,
-    params: Params,
-) -> torch.Tensor:
-    assert params.prompt, "Prompt must not be empty"
-
-    # convert tensors to PIL images
-    image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))
-
-    # make some assertions
-    assert image_pil.mode == "RGB", "Image must be RGB"
-
-    # convert PIL images to BytesIO
-    image_bytes = image_to_bytes(image_pil)
-
-    # queue state/create
-    stateid_image = await ctx.create_state(file=image_bytes)
-
-    # queue skills/infer-bbox
-    stateid_bbox = await ctx.skill_bbox(
-        stateid_image=stateid_image,
-        product_name=params.prompt,
-    )
-
-    # get bbox state/meta
-    metadata_bbox = await ctx.get_meta(stateid_bbox)
-    bounding_box = metadata_bbox["bbox"]
-
-    return bounding_box
-
-
 class Box:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
@@ -81,6 +50,37 @@ class Box:
     CATEGORY = "Finegrain/skills"
     FUNCTION = "process"
 
+    @staticmethod
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> torch.Tensor:
+        assert params.prompt, "Prompt must not be empty"
+
+        # convert tensors to PIL images
+        image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))
+
+        # make some assertions
+        assert image_pil.mode == "RGB", "Image must be RGB"
+
+        # convert PIL images to BytesIO
+        image_bytes = image_to_bytes(image_pil)
+
+        # queue state/create
+        stateid_image = await ctx.create_state(file=image_bytes)
+
+        # queue skills/infer-bbox
+        stateid_bbox = await ctx.skill_bbox(
+            stateid_image=stateid_image,
+            product_name=params.prompt,
+        )
+
+        # get bbox state/meta
+        metadata_bbox = await ctx.get_meta(stateid_bbox)
+        bounding_box = metadata_bbox["bbox"]
+
+        return bounding_box
+
     def process(
         self,
         api: EditorAPIContext,
@@ -89,7 +89,7 @@ class Box:
     ) -> tuple[torch.Tensor]:
         return (
             api.run_one_sync(
-                co=_process,
+                co=self._process,
                 params=Params(
                     image=image,
                     prompt=prompt,

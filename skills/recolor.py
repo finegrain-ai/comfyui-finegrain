@@ -18,40 +18,6 @@ class Params:
     color: str
 
 
-async def _process(ctx: EditorAPIContext, params: Params) -> torch.Tensor:
-    # convert tensors to PIL images
-    image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))
-    mask_pil = tensor_to_image(params.mask.unsqueeze(0))
-
-    # make some assertions
-    assert image_pil.size == mask_pil.size, "Image and mask sizes do not match"
-    assert image_pil.mode == "RGB", "Image must be RGB"
-    assert mask_pil.mode == "L", "Mask must be grayscale"
-
-    # convert PIL images to BytesIO
-    image_bytes = image_to_bytes(image_pil)
-    mask_bytes = image_to_bytes(mask_pil)
-
-    # queue state/create
-    stateid_image = await ctx.create_state(file=image_bytes)
-    stateid_mask = await ctx.create_state(file=mask_bytes)
-
-    # queue skills/shadow
-    stateid_recolor = await ctx.skill_recolor(
-        stateid_image=stateid_image,
-        stateid_mask=stateid_mask,
-        color=params.color,
-    )
-
-    # queue state/download
-    recolored_pil = await ctx.download_image(stateid_recolor)
-
-    # convert PIL image to tensor
-    recolored_tensor = image_to_tensor(recolored_pil).permute(0, 2, 3, 1)
-
-    return recolored_tensor
-
-
 class Recolor:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
@@ -93,6 +59,40 @@ class Recolor:
     CATEGORY = "Finegrain/skills"
     FUNCTION = "process"
 
+    @staticmethod
+    async def _process(ctx: EditorAPIContext, params: Params) -> torch.Tensor:
+        # convert tensors to PIL images
+        image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))
+        mask_pil = tensor_to_image(params.mask.unsqueeze(0))
+
+        # make some assertions
+        assert image_pil.size == mask_pil.size, "Image and mask sizes do not match"
+        assert image_pil.mode == "RGB", "Image must be RGB"
+        assert mask_pil.mode == "L", "Mask must be grayscale"
+
+        # convert PIL images to BytesIO
+        image_bytes = image_to_bytes(image_pil)
+        mask_bytes = image_to_bytes(mask_pil)
+
+        # queue state/create
+        stateid_image = await ctx.create_state(file=image_bytes)
+        stateid_mask = await ctx.create_state(file=mask_bytes)
+
+        # queue skills/shadow
+        stateid_recolor = await ctx.skill_recolor(
+            stateid_image=stateid_image,
+            stateid_mask=stateid_mask,
+            color=params.color,
+        )
+
+        # queue state/download
+        recolored_pil = await ctx.download_image(stateid_recolor)
+
+        # convert PIL image to tensor
+        recolored_tensor = image_to_tensor(recolored_pil).permute(0, 2, 3, 1)
+
+        return recolored_tensor
+
     def process(
         self,
         api: EditorAPIContext,
@@ -102,7 +102,7 @@ class Recolor:
     ) -> tuple[torch.Tensor]:
         return (
             api.run_one_sync(
-                co=_process,
+                co=self._process,
                 params=Params(
                     image=image,
                     mask=mask,

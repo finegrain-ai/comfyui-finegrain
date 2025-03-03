@@ -19,47 +19,6 @@ class Params:
     seed: int
 
 
-async def _process(
-    ctx: EditorAPIContext,
-    params: Params,
-) -> torch.Tensor:
-    assert params.mode in ["premium", "standard", "express"], "Invalid mode"
-    assert params.seed >= 0, "Seed must be a non-negative integer"
-
-    # convert tensors to PIL images
-    image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))
-    mask_pil = tensor_to_image(params.mask.unsqueeze(0))
-
-    # make some assertions
-    assert image_pil.size == mask_pil.size, "Image and mask sizes do not match"
-    assert image_pil.mode == "RGB", "Image must be RGB"
-    assert mask_pil.mode == "L", "Mask must be grayscale"
-
-    # convert PIL images to BytesIO
-    image_bytes = image_to_bytes(image_pil)
-    mask_bytes = image_to_bytes(mask_pil)
-
-    # queue state/create
-    stateid_image = await ctx.create_state(file=image_bytes)
-    stateid_mask = await ctx.create_state(file=mask_bytes)
-
-    # queue skills/erase
-    stateid_erased = await ctx.skill_erase(
-        stateid_image=stateid_image,
-        stateid_mask=stateid_mask,
-        mode=params.mode,
-        seed=params.seed,
-    )
-
-    # queue state/download
-    erased_image = await ctx.download_image(stateid_erased)
-
-    # convert PIL image to tensor
-    erased_tensor = image_to_tensor(erased_image).permute(0, 2, 3, 1)
-
-    return erased_tensor
-
-
 class Eraser:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
@@ -112,6 +71,47 @@ class Eraser:
     CATEGORY = "Finegrain/skills"
     FUNCTION = "process"
 
+    @staticmethod
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> torch.Tensor:
+        assert params.mode in ["premium", "standard", "express"], "Invalid mode"
+        assert params.seed >= 0, "Seed must be a non-negative integer"
+
+        # convert tensors to PIL images
+        image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))
+        mask_pil = tensor_to_image(params.mask.unsqueeze(0))
+
+        # make some assertions
+        assert image_pil.size == mask_pil.size, "Image and mask sizes do not match"
+        assert image_pil.mode == "RGB", "Image must be RGB"
+        assert mask_pil.mode == "L", "Mask must be grayscale"
+
+        # convert PIL images to BytesIO
+        image_bytes = image_to_bytes(image_pil)
+        mask_bytes = image_to_bytes(mask_pil)
+
+        # queue state/create
+        stateid_image = await ctx.create_state(file=image_bytes)
+        stateid_mask = await ctx.create_state(file=mask_bytes)
+
+        # queue skills/erase
+        stateid_erased = await ctx.skill_erase(
+            stateid_image=stateid_image,
+            stateid_mask=stateid_mask,
+            mode=params.mode,
+            seed=params.seed,
+        )
+
+        # queue state/download
+        erased_image = await ctx.download_image(stateid_erased)
+
+        # convert PIL image to tensor
+        erased_tensor = image_to_tensor(erased_image).permute(0, 2, 3, 1)
+
+        return erased_tensor
+
     def process(
         self,
         api: EditorAPIContext,
@@ -122,7 +122,7 @@ class Eraser:
     ) -> tuple[torch.Tensor]:
         return (
             api.run_one_sync(
-                co=_process,
+                co=self._process,
                 params=Params(
                     image=image,
                     mask=mask,
