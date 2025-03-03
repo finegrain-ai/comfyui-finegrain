@@ -1,2 +1,2 @@
 hatchling>=1.27.0
-git+https://github.com/finegrain-ai/finegrain-python@a03cff35d17d5351cb7179cfa71c2e2eb5e7b1ca#subdirectory=finegrain
+git+https://github.com/finegrain-ai/finegrain-python@246e22c5b811987ce5e6131e4d15ad7014eab195#subdirectory=finegrain
