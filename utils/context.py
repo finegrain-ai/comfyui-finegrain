@@ -11,6 +11,22 @@ logger = logging.getLogger(__name__)
 
 
 class EditorAPIContext(_EditorAPIContext):
+    async def call_skill(
+        self,
+        url: str,
+        params: dict[str, Any] | None = None,
+        timeout: float | None = None,
+    ) -> tuple[str, bool]:
+        params = {"priority": self.priority} | (params or {})
+        response = await self.request("POST", f"skills/{url}", json=params, raise_for_status=False)
+        if response.status_code != 200:
+            error = response.json()["error"]
+            raise RuntimeError(f"Failed to call skill: [{response.status_code}] {error}")
+
+        state_id = response.json()["state"]
+        status = await self.sse_await(state_id, timeout=timeout)
+        return state_id, status
+
     async def create_state(
         self,
         file_url: str | None = None,
@@ -257,5 +273,4 @@ class API:
         )
         ctx.run_one_sync(self._login, None)
         ctx.run_one_sync(self._credits, None)
-
         return (ctx,)
