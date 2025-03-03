@@ -6,9 +6,13 @@
 
 To use these custom nodes, you need Finegrain API credentials:
 
-1. Sign up for an account at https://editor.finegrain.ai/signup.
+1. Sign up for an account at https://editor.finegrain.ai/signup:
 
-2. Use your **username** (email) and **password** in the `Finegrain API` node.
+![finegrain login](assets/finegrain_login.webp)
+
+2. Use your **username** (email) and **password** in the `Finegrain API` node:
+
+![node login](assets/node_login.webp)
 
 > [!Note]
 > Behind the scenes, authentication is handled by the [Finegrain Python client](https://github.com/finegrain-ai/finegrain-python/),
