@@ -325,16 +325,6 @@ class EditorAPIContext:
         assert self.token
         return {"Authorization": f"Bearer {self.token}"}
 
-    async def login(self) -> None:
-        async with self as client:
-            response = await client.post(
-                f"{self.base_url}/auth/login",
-                json={"username": self.user, "password": self.password},
-            )
-        response.raise_for_status()
-        self.logger.debug(f"logged in as {self.user}")
-        self.token = response.json()["token"]
-
     async def request(
         self,
         method: Literal["GET", "POST"],
@@ -477,6 +467,20 @@ class EditorAPIContext:
 
     ######################### Below is modified from the original finegrain lib #########################
 
+    async def login(self) -> None:
+        async with self as client:
+            response = await client.post(
+                f"{self.base_url}/auth/login",
+                json={"username": self.user, "password": self.password},
+            )
+
+        if response.status_code != 200:
+            error = response.json()["error"]
+            raise RuntimeError(f"Failed to login: [{response.status_code}] {error}")
+
+        self.logger.info(f"logged in as {self.user}")
+        self.token = response.json()["token"]
+
     async def call_skill(
         self,
         url: str,
@@ -484,7 +488,13 @@ class EditorAPIContext:
         timeout: float | None = None,
     ) -> tuple[str, bool]:
         params = {"priority": self.priority} | (params or {})
-        response = await self.request("POST", f"skills/{url}", json=params, raise_for_status=False)
+        response = await self.request(
+            "POST",
+            f"skills/{url}",
+            json=params,
+            raise_for_status=False,
+        )
+
         if response.status_code != 200:
             error = response.json()["error"]
             raise RuntimeError(f"Failed to call skill: [{response.status_code}] {error}")
@@ -688,14 +698,6 @@ class API:
     FUNCTION = "process"
 
     @staticmethod
-    async def _login(ctx: EditorAPIContext, params: dict[str, Any] | None = None) -> None:
-        try:
-            await ctx.login()
-            logger.info(f"Logged in to {ctx.base_url} as {ctx.user}")
-        except Exception as e:
-            raise RuntimeError(f"Login to {ctx.base_url} failed, check your credentials") from e
-
-    @staticmethod
     async def _credits(ctx: EditorAPIContext, params: dict[str, Any] | None = None) -> None:
         response = await ctx.request(method="GET", url="auth/me")
         infos = response.json()
@@ -715,6 +717,5 @@ class API:
             default_timeout=timeout,
             user_agent="comfyui-finegrain/1.3.0",
         )
-        ctx.run_one_sync(self._login, None)
         ctx.run_one_sync(self._credits, None)
         return (ctx,)
