@@ -3,7 +3,8 @@ authors = [
     { name = "Finegrain Team", email = "bonjour@lagon.tech" },
 ]
 dependencies = [
-    "finegrain @ git+https://github.com/finegrain-ai/finegrain-python@246e22c5b811987ce5e6131e4d15ad7014eab195#subdirectory=finegrain",
+    "httpx-sse>=0.4.0",
+    "httpx>=0.27.0",
 ]
 description = "Finegrain API ComfyUI custom nodes"
 license = { text = "MIT License" }

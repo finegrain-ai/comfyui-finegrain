@@ -1,2 +1,3 @@
 hatchling>=1.27.0
-git+https://github.com/finegrain-ai/finegrain-python@246e22c5b811987ce5e6131e4d15ad7014eab195#subdirectory=finegrain
+httpx>=0.27.0
+httpx-sse>=0.4.0
