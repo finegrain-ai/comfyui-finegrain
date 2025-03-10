@@ -268,6 +268,7 @@ class EditorAPIContext:
         base_url: str = "https://api.finegrain.ai/editor",
         priority: Priority = "standard",
         verify: bool | str = True,
+        user_agent: str = "finegrain-python/0.1",
         default_timeout: float = 60.0,
     ) -> None:
         self.user = user
@@ -275,6 +276,7 @@ class EditorAPIContext:
         self.base_url = base_url
         self.priority = priority
         self.verify = verify
+        self.user_agent = user_agent
         self.default_timeout = default_timeout
 
         self.logger = logger
@@ -303,7 +305,10 @@ class EditorAPIContext:
             self._client_ctx_depth += 1
             return self._client
         assert self._client_ctx_depth == 0
-        self._client = httpx.AsyncClient(verify=self.verify)
+        self._client = httpx.AsyncClient(
+            verify=self.verify,
+            headers={"User-Agent": self.user_agent},
+        )
         self._client_ctx_depth = 1
         return self._client
 
@@ -708,6 +713,7 @@ class API:
             password=password,
             priority=priority,
             default_timeout=timeout,
+            user_agent="comfyui-finegrain/1.2.0",
         )
         ctx.run_one_sync(self._login, None)
         ctx.run_one_sync(self._credits, None)
