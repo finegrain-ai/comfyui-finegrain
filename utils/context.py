@@ -713,7 +713,7 @@ class API:
             password=password,
             priority=priority,
             default_timeout=timeout,
-            user_agent="comfyui-finegrain/1.2.0",
+            user_agent="comfyui-finegrain/1.3.0",
         )
         ctx.run_one_sync(self._login, None)
         ctx.run_one_sync(self._credits, None)
