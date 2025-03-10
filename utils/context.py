@@ -168,29 +168,6 @@ class EditorAPIContext(_EditorAPIContext):
             },
         )
 
-    async def skill_upscale(
-        self,
-        stateid_image: StateID,
-        preprocess: bool,
-        scale_factor: int,
-        resemblance: float,
-        decay: float,
-        creativity: float,
-        seed: int,
-    ) -> StateID:
-        return await self.ensure_skill(
-            url=f"upscale/{stateid_image}",
-            params={
-                "preprocess": preprocess,
-                "scale_factor": scale_factor,
-                "resemblance": resemblance,
-                "decay": decay,
-                "creativity": creativity,
-                "seed": seed,
-            },
-            timeout=max(300, self.default_timeout),
-        )
-
     async def skill_set_bgcolor(
         self,
         stateid_image: StateID,

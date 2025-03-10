@@ -10,7 +10,6 @@ from .advanced.segment import AdvancedSegment
 from .advanced.shadow import AdvancedShadow
 from .advanced.upload_image import UploadImage
 from .advanced.upload_mask import UploadMask
-from .advanced.upscale import AdvancedUpscale
 from .skills.blender import Blender
 from .skills.box import Box
 from .skills.eraser import Eraser
@@ -18,7 +17,6 @@ from .skills.name import InferMainSubject
 from .skills.recolor import Recolor
 from .skills.segment import Segment
 from .skills.shadow import Shadow
-from .skills.upscale import Upscale
 from .utils.bbox import CreateBoundingBox, DrawBoundingBox, ImageCropBoundingBox, MaskCropBoundingBox
 from .utils.context import API
 from .utils.image import ApplyTransparencyMask
@@ -33,7 +31,6 @@ NODE_CLASS_MAPPINGS: dict[str, Any] = {
         AdvancedRecolor,
         AdvancedSegment,
         AdvancedShadow,
-        AdvancedUpscale,
         DownloadImage,
         DownloadMask,
         UploadImage,
@@ -46,7 +43,6 @@ NODE_CLASS_MAPPINGS: dict[str, Any] = {
         Recolor,
         Segment,
         Shadow,
-        Upscale,
         # utils nodes
         CreateBoundingBox,
         DrawBoundingBox,
