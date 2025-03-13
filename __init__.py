@@ -18,7 +18,6 @@ from .skills.recolor import Recolor
 from .skills.segment import Segment
 from .skills.shadow import Shadow
 from .utils.bbox import CreateBoundingBox, DrawBoundingBox, ImageCropBoundingBox, MaskCropBoundingBox
-from .utils.context import API
 from .utils.image import ApplyTransparencyMask
 
 NODE_CLASS_MAPPINGS: dict[str, Any] = {
@@ -49,7 +48,6 @@ NODE_CLASS_MAPPINGS: dict[str, Any] = {
         ImageCropBoundingBox,
         MaskCropBoundingBox,
         ApplyTransparencyMask,
-        API,
     ]
 }
 
