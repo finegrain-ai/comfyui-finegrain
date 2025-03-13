@@ -4,7 +4,7 @@ from typing import Any
 import torch
 
 from ..utils.bbox import BoundingBox
-from ..utils.context import EditorAPIContext
+from ..utils.context import EditorAPIContext, ErrorResult, _get_ctx
 from ..utils.image import (
     image_to_bytes,
     image_to_tensor,
@@ -24,12 +24,6 @@ class Segment:
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
             "required": {
-                "api": (
-                    "FG_API",
-                    {
-                        "tooltip": "The Finegrain API context",
-                    },
-                ),
                 "image": (
                     "IMAGE",
                     {
@@ -76,24 +70,30 @@ class Segment:
         # convert PIL images to BytesIO
         image_bytes = image_to_bytes(image_pil)
 
-        # queue state/create
-        stateid_image = await ctx.create_state(file=image_bytes)
+        # upload image
+        stateid_image = await ctx.call_async.upload_image(file=image_bytes)
 
-        # queue skills/infer-bbox
-        stateid_mask = await ctx.skill_segment(
-            stateid_image=stateid_image,
+        # call segment skill
+        result_segment = await ctx.call_async.segment(
+            state_id=stateid_image,
             bbox=params.bbox,
         )
+        if isinstance(result_segment, ErrorResult):
+            raise ValueError(f"Failed to segment object: {result_segment.error}")
+        stateid_mask = result_segment.state_id
 
-        # queue skills/crop
+        # call crop if needed
         if params.cropped:
-            stateid_mask = await ctx.skill_crop(
-                stateid_image=stateid_mask,
+            result_crop = await ctx.call_async.crop(
+                state_id=stateid_mask,
                 bbox=params.bbox,
             )
+            if isinstance(result_crop, ErrorResult):
+                raise ValueError(f"Failed to crop mask: {result_crop.error}")
+            stateid_mask = result_crop.state_id
 
-        # queue state/download
-        mask = await ctx.download_image(stateid_mask)
+        # download mask
+        mask = await ctx.call_async.download_image(stateid_mask)
 
         # convert PIL image to tensor
         mask_tensor = image_to_tensor(mask).squeeze(0)
@@ -101,13 +101,12 @@ class Segment:
 
     def process(
         self,
-        api: EditorAPIContext,
         image: torch.Tensor,
         bbox: BoundingBox,
-        cropped: bool,
+        cropped: bool = False,
     ) -> tuple[torch.Tensor]:
         return (
-            api.run_one_sync(
+            _get_ctx().run_one_sync(
                 co=self._process,
                 params=Params(
                     image=image,

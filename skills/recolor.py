@@ -3,7 +3,7 @@ from typing import Any
 
 import torch
 
-from ..utils.context import EditorAPIContext
+from ..utils.context import EditorAPIContext, ErrorResult, _get_ctx
 from ..utils.image import (
     image_to_bytes,
     image_to_tensor,
@@ -23,12 +23,6 @@ class Recolor:
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
             "required": {
-                "api": (
-                    "FG_API",
-                    {
-                        "tooltip": "The Finegrain API context",
-                    },
-                ),
                 "image": (
                     "IMAGE",
                     {
@@ -74,34 +68,36 @@ class Recolor:
         image_bytes = image_to_bytes(image_pil)
         mask_bytes = image_to_bytes(mask_pil)
 
-        # queue state/create
-        stateid_image = await ctx.create_state(file=image_bytes)
-        stateid_mask = await ctx.create_state(file=mask_bytes)
+        # upload image and mask
+        stateid_image = await ctx.call_async.upload_image(file=image_bytes)
+        stateid_mask = await ctx.call_async.upload_image(file=mask_bytes)
 
-        # queue skills/shadow
-        stateid_recolor = await ctx.skill_recolor(
-            stateid_image=stateid_image,
-            stateid_mask=stateid_mask,
+        # call recolor skill
+        result_recolor = await ctx.call_async.recolor(
+            image_state_id=stateid_image,
+            mask_state_id=stateid_mask,
             color=params.color,
         )
+        if isinstance(result_recolor, ErrorResult):
+            raise ValueError(f"Failed to recolor object: {result_recolor.error}")
+        stateid_recolor = result_recolor.state_id
 
-        # queue state/download
-        recolored_pil = await ctx.download_image(stateid_recolor)
+        # download output image
+        recolored_image = await ctx.call_async.download_image(stateid_recolor)
 
         # convert PIL image to tensor
-        recolored_tensor = image_to_tensor(recolored_pil).permute(0, 2, 3, 1)
+        recolored_tensor = image_to_tensor(recolored_image).permute(0, 2, 3, 1)
 
         return recolored_tensor
 
     def process(
         self,
-        api: EditorAPIContext,
         image: torch.Tensor,
         mask: torch.Tensor,
         color: str,
     ) -> tuple[torch.Tensor]:
         return (
-            api.run_one_sync(
+            _get_ctx().run_one_sync(
                 co=self._process,
                 params=Params(
                     image=image,

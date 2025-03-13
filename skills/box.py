@@ -3,7 +3,7 @@ from typing import Any
 
 import torch
 
-from ..utils.context import EditorAPIContext
+from ..utils.context import BoundingBox, EditorAPIContext, ErrorResult, _get_ctx
 from ..utils.image import (
     image_to_bytes,
     tensor_to_image,
@@ -21,12 +21,6 @@ class Box:
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
             "required": {
-                "api": (
-                    "FG_API",
-                    {
-                        "tooltip": "The Finegrain API context",
-                    },
-                ),
                 "image": (
                     "IMAGE",
                     {
@@ -54,7 +48,7 @@ class Box:
     async def _process(
         ctx: EditorAPIContext,
         params: Params,
-    ) -> torch.Tensor:
+    ) -> BoundingBox:
         assert params.prompt, "Prompt must not be empty"
 
         # convert tensors to PIL images
@@ -66,29 +60,26 @@ class Box:
         # convert PIL images to BytesIO
         image_bytes = image_to_bytes(image_pil)
 
-        # queue state/create
-        stateid_image = await ctx.create_state(file=image_bytes)
+        # upload image
+        stateid_image = await ctx.call_async.upload_image(file=image_bytes)
 
-        # queue skills/infer-bbox
-        stateid_bbox = await ctx.skill_bbox(
-            stateid_image=stateid_image,
+        # call bbox skill
+        result_bbox = await ctx.call_async.infer_bbox(
+            state_id=stateid_image,
             product_name=params.prompt,
         )
+        if isinstance(result_bbox, ErrorResult):
+            raise ValueError(f"Failed to detect object: {result_bbox.error}")
 
-        # get bbox state/meta
-        metadata_bbox = await ctx.get_meta(stateid_bbox)
-        bounding_box = metadata_bbox["bbox"]
-
-        return bounding_box
+        return result_bbox.bbox
 
     def process(
         self,
-        api: EditorAPIContext,
         image: torch.Tensor,
         prompt: str,
-    ) -> tuple[torch.Tensor]:
+    ) -> tuple[BoundingBox]:
         return (
-            api.run_one_sync(
+            _get_ctx().run_one_sync(
                 co=self._process,
                 params=Params(
                     image=image,

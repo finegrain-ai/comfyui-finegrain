@@ -4,7 +4,7 @@ from typing import Any
 import torch
 
 from ..utils.bbox import BoundingBox
-from ..utils.context import EditorAPIContext
+from ..utils.context import EditorAPIContext, ErrorResult, _get_ctx
 from ..utils.image import (
     image_to_bytes,
     image_to_tensor,
@@ -27,12 +27,6 @@ class Shadow:
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
             "required": {
-                "api": (
-                    "FG_API",
-                    {
-                        "tooltip": "The Finegrain API context",
-                    },
-                ),
                 "cutout": (
                     "IMAGE",
                     {
@@ -109,35 +103,40 @@ class Shadow:
         # convert PIL images to BytesIO
         cutout_bytes = image_to_bytes(cutout_pil)
 
-        # queue state/create
-        stateid_cutout = await ctx.create_state(file=cutout_bytes)
+        # upload cutout
+        stateid_cutout = await ctx.call_async.upload_image(file=cutout_bytes)
 
-        # queue skills/shadow
-        stateid_shadow = await ctx.skill_shadow(
-            stateid_cutout=stateid_cutout,
+        # call shadow skill
+        result_shadow = await ctx.call_async.shadow(
+            state_id=stateid_cutout,
             resolution=(params.width, params.height),
             bbox=params.bbox,
             seed=params.seed,
         )
+        if isinstance(result_shadow, ErrorResult):
+            raise ValueError(f"Failed to create shadow: {result_shadow.error}")
+        stateid_shadow = result_shadow.state_id
 
-        # queue skills/set-background-color
+        # apply background color
         if params.bgcolor and params.bgcolor != "transparent":
-            stateid_shadow = await ctx.skill_set_bgcolor(
-                stateid_image=stateid_shadow,
-                color=params.bgcolor,
+            result_bgcolor = await ctx.call_async.set_background_color(
+                state_id=stateid_shadow,
+                background=params.bgcolor,
             )
+            if isinstance(result_bgcolor, ErrorResult):
+                raise ValueError(f"Failed to set background color: {result_bgcolor.error}")
+            stateid_shadow = result_bgcolor.state_id
 
-        # queue state/download
-        shadow_pil = await ctx.download_image(stateid_shadow)
+        # download output image
+        shadow_image = await ctx.call_async.download_image(stateid_shadow)
 
         # convert PIL image to tensor
-        shadow_tensor = image_to_tensor(shadow_pil).permute(0, 2, 3, 1)
+        shadow_tensor = image_to_tensor(shadow_image).permute(0, 2, 3, 1)
 
         return shadow_tensor
 
     def process(
         self,
-        api: EditorAPIContext,
         cutout: torch.Tensor,
         width: int,
         height: int,
@@ -146,7 +145,7 @@ class Shadow:
         bbox: BoundingBox | None = None,
     ) -> tuple[torch.Tensor]:
         return (
-            api.run_one_sync(
+            _get_ctx().run_one_sync(
                 co=self._process,
                 params=Params(
                     cutout=cutout,

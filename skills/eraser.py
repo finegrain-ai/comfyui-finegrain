@@ -1,21 +1,17 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, get_args
 
 import torch
 
-from ..utils.context import EditorAPIContext
-from ..utils.image import (
-    image_to_bytes,
-    image_to_tensor,
-    tensor_to_image,
-)
+from ..utils.context import EditorAPIContext, ErrorResult, Mode, _get_ctx
+from ..utils.image import image_to_bytes, image_to_tensor, tensor_to_image
 
 
 @dataclass(kw_only=True)
 class Params:
     image: torch.Tensor
     mask: torch.Tensor
-    mode: str
+    mode: Mode
     seed: int
 
 
@@ -24,12 +20,6 @@ class Eraser:
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
             "required": {
-                "api": (
-                    "FG_API",
-                    {
-                        "tooltip": "The Finegrain API context",
-                    },
-                ),
                 "image": (
                     "IMAGE",
                     {
@@ -76,7 +66,7 @@ class Eraser:
         ctx: EditorAPIContext,
         params: Params,
     ) -> torch.Tensor:
-        assert params.mode in ["premium", "standard", "express"], "Invalid mode"
+        assert params.mode in get_args(Mode), f"Mode must be one of {get_args(Mode)}"
         assert params.seed >= 0, "Seed must be a non-negative integer"
 
         # convert tensors to PIL images
@@ -92,36 +82,38 @@ class Eraser:
         image_bytes = image_to_bytes(image_pil)
         mask_bytes = image_to_bytes(mask_pil)
 
-        # queue state/create
-        stateid_image = await ctx.create_state(file=image_bytes)
-        stateid_mask = await ctx.create_state(file=mask_bytes)
+        # upload image and mask
+        stateid_image = await ctx.call_async.upload_image(file=image_bytes)
+        stateid_mask = await ctx.call_async.upload_image(file=mask_bytes)
 
-        # queue skills/erase
-        stateid_erased = await ctx.skill_erase(
-            stateid_image=stateid_image,
-            stateid_mask=stateid_mask,
+        # call erase skill
+        result_erase = await ctx.call_async.erase(
+            image_state_id=stateid_image,
+            mask_state_id=stateid_mask,
             mode=params.mode,
             seed=params.seed,
         )
+        if isinstance(result_erase, ErrorResult):
+            raise ValueError(f"Failed to erase object: {result_erase.error}")
+        stateid_erase = result_erase.state_id
 
-        # queue state/download
-        erased_image = await ctx.download_image(stateid_erased)
+        # download output image
+        image_erase = await ctx.call_async.download_image(stateid_erase)
 
         # convert PIL image to tensor
-        erased_tensor = image_to_tensor(erased_image).permute(0, 2, 3, 1)
+        tensor_erase = image_to_tensor(image_erase).permute(0, 2, 3, 1)
 
-        return erased_tensor
+        return tensor_erase
 
     def process(
         self,
-        api: EditorAPIContext,
         image: torch.Tensor,
         mask: torch.Tensor,
-        mode: str,
+        mode: Mode,
         seed: int,
     ) -> tuple[torch.Tensor]:
         return (
-            api.run_one_sync(
+            _get_ctx().run_one_sync(
                 co=self._process,
                 params=Params(
                     image=image,
