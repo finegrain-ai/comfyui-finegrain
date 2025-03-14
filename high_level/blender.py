@@ -1,15 +1,11 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, get_args
 
 import torch
 
 from ..utils.bbox import BoundingBox
-from ..utils.context import EditorAPIContext
-from ..utils.image import (
-    image_to_bytes,
-    image_to_tensor,
-    tensor_to_image,
-)
+from ..utils.context import EditorAPIContext, ErrorResult, Mode, _get_ctx
+from ..utils.image import image_to_tensor, tensor_to_image
 
 
 @dataclass(kw_only=True)
@@ -19,7 +15,7 @@ class Params:
     bbox: BoundingBox
     flip: bool
     rotation_angle: float
-    mode: str
+    mode: Mode
     seed: int
 
 
@@ -28,12 +24,6 @@ class Blender:
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
             "required": {
-                "api": (
-                    "FG_API",
-                    {
-                        "tooltip": "The Finegrain API context.",
-                    },
-                ),
                 "scene": (
                     "IMAGE",
                     {
@@ -58,8 +48,6 @@ class Blender:
                         "express",
                     ],
                 ),
-            },
-            "optional": {
                 "flip": (
                     "BOOLEAN",
                     {
@@ -93,63 +81,64 @@ class Blender:
 
     TITLE = "Blender"
     DESCRIPTION = "Blend an object cutout into a scene."
-    CATEGORY = "Finegrain/skills"
+    CATEGORY = "Finegrain/high-level"
     FUNCTION = "process"
 
     @staticmethod
-    async def _process(ctx: EditorAPIContext, params: Params) -> torch.Tensor:
-        assert params.mode in ["standard", "express"], "Invalid mode"
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> torch.Tensor:
+        assert params.mode in get_args(Mode), f"Mode must be one of {get_args(Mode)}"
         assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
         assert -360 <= params.rotation_angle <= 360, "Rotation angle must be between -360 and 360"
 
         # convert tensors to PIL images
-        scene_pil = tensor_to_image(params.scene.permute(0, 3, 1, 2))
-        cutout_pil = tensor_to_image(params.cutout.permute(0, 3, 1, 2))
+        pil_scene = tensor_to_image(params.scene.permute(0, 3, 1, 2))
+        pil_cutout = tensor_to_image(params.cutout.permute(0, 3, 1, 2))
 
         # make some assertions
-        assert scene_pil.mode == "RGB", "Background must be RGB"
-        assert cutout_pil.mode == "RGBA", "Cutout must be RGBA"
+        assert pil_scene.mode == "RGB", "Background must be RGB"
+        assert pil_cutout.mode == "RGBA", "Cutout must be RGBA"
 
-        # convert PIL images to BytesIO
-        scene_bytes = image_to_bytes(scene_pil)
-        cutout_bytes = image_to_bytes(cutout_pil)
+        # upload image and cutout
+        stateid_scene = await ctx.call_async.upload_pil_image(pil_scene)
+        stateid_cutout = await ctx.call_async.upload_pil_image(pil_cutout)
 
-        # queue state/create
-        stateid_scene = await ctx.create_state(file=scene_bytes)
-        stateid_cutout = await ctx.create_state(file=cutout_bytes)
-
-        # queue skills/erase
-        stateid_erased = await ctx.skill_blend(
-            stateid_scene=stateid_scene,
-            stateid_cutout=stateid_cutout,
+        # call blend skill
+        result_blend = await ctx.call_async.blend(
+            image_state_id=stateid_scene,
+            mask_state_id=stateid_cutout,
             bbox=params.bbox,
             flip=params.flip,
             rotation_angle=params.rotation_angle,
             mode=params.mode,
             seed=params.seed,
         )
+        if isinstance(result_blend, ErrorResult):
+            raise ValueError(f"Failed to blend: {result_blend.error}")
+        stateid_blend = result_blend.state_id
 
-        # queue state/download
-        blended_pil = await ctx.download_image(stateid_erased)
+        # download output image
+        pil_output = await ctx.call_async.download_pil_image(stateid_blend)
 
         # convert PIL image to tensor
-        blended_tensor = image_to_tensor(blended_pil).permute(0, 2, 3, 1)
+        tensor_output = image_to_tensor(pil_output).permute(0, 2, 3, 1)
 
-        return blended_tensor
+        return tensor_output
 
     def process(
         self,
-        api: EditorAPIContext,
         scene: torch.Tensor,
         cutout: torch.Tensor,
         bbox: BoundingBox,
         flip: bool,
         rotation_angle: float,
-        mode: str,
+        mode: Mode,
         seed: int,
     ) -> tuple[torch.Tensor]:
         return (
-            api.run_one_sync(
+            _get_ctx().run_one_sync(
                 co=self._process,
                 params=Params(
                     scene=scene,

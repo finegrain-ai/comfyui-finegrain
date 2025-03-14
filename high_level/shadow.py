@@ -4,12 +4,8 @@ from typing import Any
 import torch
 
 from ..utils.bbox import BoundingBox
-from ..utils.context import EditorAPIContext
-from ..utils.image import (
-    image_to_bytes,
-    image_to_tensor,
-    tensor_to_image,
-)
+from ..utils.context import EditorAPIContext, ErrorResult, _get_ctx
+from ..utils.image import image_to_tensor, tensor_to_image
 
 
 @dataclass(kw_only=True)
@@ -18,7 +14,7 @@ class Params:
     width: int
     height: int
     seed: int
-    bgcolor: str | None
+    bgcolor: str
     bbox: BoundingBox | None
 
 
@@ -27,12 +23,6 @@ class Shadow:
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
             "required": {
-                "api": (
-                    "FG_API",
-                    {
-                        "tooltip": "The Finegrain API context",
-                    },
-                ),
                 "cutout": (
                     "IMAGE",
                     {
@@ -68,8 +58,6 @@ class Shadow:
                         "tooltip": "Seed for the random number generator.",
                     },
                 ),
-            },
-            "optional": {
                 "bgcolor": (
                     "STRING",
                     {
@@ -77,6 +65,8 @@ class Shadow:
                         "tooltip": "Background color of the shadow.",
                     },
                 ),
+            },
+            "optional": {
                 "bbox": (
                     "BBOX",
                     {
@@ -91,62 +81,68 @@ class Shadow:
 
     TITLE = "Shadow"
     DESCRIPTION = "Create a shadow packshot from a cutout."
-    CATEGORY = "Finegrain/skills"
+    CATEGORY = "Finegrain/high-level"
     FUNCTION = "process"
 
     @staticmethod
-    async def _process(ctx: EditorAPIContext, params: Params) -> torch.Tensor:
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> torch.Tensor:
         assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
         assert params.width >= 8, "Width must be at least 8"
         assert params.height >= 8, "Height must be at least 8"
 
         # convert tensors to PIL images
-        cutout_pil = tensor_to_image(params.cutout.permute(0, 3, 1, 2))
+        pil_cutout = tensor_to_image(params.cutout.permute(0, 3, 1, 2))
 
         # make some assertions
-        assert cutout_pil.mode == "RGBA", "Cutout must be RGBA"
+        assert pil_cutout.mode == "RGBA", "Cutout must be RGBA"
 
-        # convert PIL images to BytesIO
-        cutout_bytes = image_to_bytes(cutout_pil)
+        # upload cutout
+        stateid_cutout = await ctx.call_async.upload_pil_image(pil_cutout)
 
-        # queue state/create
-        stateid_cutout = await ctx.create_state(file=cutout_bytes)
-
-        # queue skills/shadow
-        stateid_shadow = await ctx.skill_shadow(
-            stateid_cutout=stateid_cutout,
+        # call shadow skill
+        result_shadow = await ctx.call_async.shadow(
+            state_id=stateid_cutout,
             resolution=(params.width, params.height),
             bbox=params.bbox,
             seed=params.seed,
+            background="transparent",
         )
+        if isinstance(result_shadow, ErrorResult):
+            raise ValueError(f"Failed to create shadow: {result_shadow.error}")
+        stateid_shadow = result_shadow.state_id
 
-        # queue skills/set-background-color
-        if params.bgcolor and params.bgcolor != "transparent":
-            stateid_shadow = await ctx.skill_set_bgcolor(
-                stateid_image=stateid_shadow,
-                color=params.bgcolor,
+        if params.bgcolor != "transparent":
+            # call set_background_color skill
+            result_bgcolor = await ctx.call_async.set_background_color(
+                state_id=stateid_shadow,
+                background=params.bgcolor,
             )
+            if isinstance(result_bgcolor, ErrorResult):
+                raise ValueError(f"Failed to set background color: {result_bgcolor.error}")
+            stateid_shadow = result_bgcolor.state_id
 
-        # queue state/download
-        shadow_pil = await ctx.download_image(stateid_shadow)
+        # download output image
+        pil_output = await ctx.call_async.download_pil_image(stateid_shadow)
 
         # convert PIL image to tensor
-        shadow_tensor = image_to_tensor(shadow_pil).permute(0, 2, 3, 1)
+        tensor_output = image_to_tensor(pil_output).permute(0, 2, 3, 1)
 
-        return shadow_tensor
+        return tensor_output
 
     def process(
         self,
-        api: EditorAPIContext,
         cutout: torch.Tensor,
         width: int,
         height: int,
         seed: int,
-        bgcolor: str | None = None,
+        bgcolor: str,
         bbox: BoundingBox | None = None,
     ) -> tuple[torch.Tensor]:
         return (
-            api.run_one_sync(
+            _get_ctx().run_one_sync(
                 co=self._process,
                 params=Params(
                     cutout=cutout,

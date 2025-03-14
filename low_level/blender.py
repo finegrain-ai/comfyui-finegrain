@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, get_args
 
 from ..utils.bbox import BoundingBox
-from ..utils.context import EditorAPIContext, StateID
+from ..utils.context import EditorAPIContext, ErrorResult, Mode, StateID, _get_ctx
 
 
 @dataclass(kw_only=True)
@@ -12,40 +12,15 @@ class Params:
     bbox: BoundingBox
     flip: bool
     rotation_angle: float
-    mode: str
+    mode: Mode
     seed: int
 
 
-async def _process(ctx: EditorAPIContext, params: Params) -> StateID:
-    assert params.mode in ["express", "standard", "premium"], "Invalid mode"
-    assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
-    assert -360 <= params.rotation_angle <= 360, "Rotation angle must be between -360 and 360"
-
-    # queue skills/erase
-    stateid_erased = await ctx.skill_blend(
-        stateid_scene=params.scene,
-        stateid_cutout=params.cutout,
-        bbox=params.bbox,
-        flip=params.flip,
-        rotation_angle=params.rotation_angle,
-        mode=params.mode,
-        seed=params.seed,
-    )
-
-    return stateid_erased
-
-
-class AdvancedBlender:
+class Blender:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
             "required": {
-                "api": (
-                    "FG_API",
-                    {
-                        "tooltip": "The Finegrain API context.",
-                    },
-                ),
                 "scene": (
                     "STATEID",
                     {
@@ -64,13 +39,10 @@ class AdvancedBlender:
                         "tooltip": "Bounding box of where to place the cutout in the scene.",
                     },
                 ),
-            },
-            "optional": {
                 "mode": (
                     [
-                        "express",
                         "standard",
-                        "premium",
+                        "express",
                     ],
                 ),
                 "flip": (
@@ -104,25 +76,49 @@ class AdvancedBlender:
     RETURN_TYPES = ("STATEID",)
     RETURN_NAMES = ("image",)
 
-    TITLE = "[Advanced] Blender"
+    TITLE = "[Low level] Blender"
     DESCRIPTION = "Blend an object cutout into a scene."
-    CATEGORY = "Finegrain/advanced"
+    CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
+
+    @staticmethod
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> StateID:
+        assert params.mode in get_args(Mode), f"Mode must be one of {get_args(Mode)}"
+        assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
+        assert -360 <= params.rotation_angle <= 360, "Rotation angle must be between -360 and 360"
+
+        # call blend skill
+        result_erase = await ctx.call_async.blend(
+            image_state_id=params.scene,
+            mask_state_id=params.cutout,
+            bbox=params.bbox,
+            flip=params.flip,
+            rotation_angle=params.rotation_angle,
+            mode=params.mode,
+            seed=params.seed,
+        )
+        if isinstance(result_erase, ErrorResult):
+            raise ValueError(f"Failed to blend object: {result_erase.error}")
+        stateid_erase = result_erase.state_id
+
+        return stateid_erase
 
     def process(
         self,
-        api: EditorAPIContext,
         scene: StateID,
         cutout: StateID,
         bbox: BoundingBox,
         flip: bool,
         rotation_angle: float,
-        mode: str,
+        mode: Mode,
         seed: int,
     ) -> tuple[StateID]:
         return (
-            api.run_one_sync(
-                co=_process,
+            _get_ctx().run_one_sync(
+                co=self._process,
                 params=Params(
                     scene=scene,
                     cutout=cutout,

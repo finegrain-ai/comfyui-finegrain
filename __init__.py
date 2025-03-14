@@ -1,55 +1,53 @@
 from typing import Any
 
-from .advanced.blender import AdvancedBlender
-from .advanced.box import AdvancedBox
-from .advanced.download_image import DownloadImage
-from .advanced.download_mask import DownloadMask
-from .advanced.eraser import AdvancedEraser
-from .advanced.recolor import AdvancedRecolor
-from .advanced.segment import AdvancedSegment
-from .advanced.shadow import AdvancedShadow
-from .advanced.upload_image import UploadImage
-from .advanced.upload_mask import UploadMask
-from .skills.blender import Blender
-from .skills.box import Box
-from .skills.eraser import Eraser
-from .skills.name import InferMainSubject
-from .skills.recolor import Recolor
-from .skills.segment import Segment
-from .skills.shadow import Shadow
+from .high_level.blender import Blender as HighLevelBlender
+from .high_level.box import Box as HighLevelBox
+from .high_level.eraser import Eraser as HighLevelEraser
+from .high_level.name import InferMainSubject as HighLevelInferMainSubject
+from .high_level.recolor import Recolor as HighLevelRecolor
+from .high_level.segment import Segment as HighLevelSegment
+from .high_level.shadow import Shadow as HighLevelShadow
+from .low_level.blender import Blender as LowLevelBlender
+from .low_level.box import Box as LowLevelBox
+from .low_level.download_image import DownloadImage as LowLevelDownloadImage
+from .low_level.download_mask import DownloadMask as LowLevelDownloadMask
+from .low_level.eraser import Eraser as LowLevelEraser
+from .low_level.recolor import Recolor as LowLevelRecolor
+from .low_level.segment import Segment as LowLevelSegment
+from .low_level.shadow import Shadow as LowLevelShadow
+from .low_level.upload_image import UploadImage as LowLevelUploadImage
+from .low_level.upload_mask import UploadMask as LowLevelUploadMask
 from .utils.bbox import CreateBoundingBox, DrawBoundingBox, ImageCropBoundingBox, MaskCropBoundingBox
-from .utils.context import API
 from .utils.image import ApplyTransparencyMask
 
 NODE_CLASS_MAPPINGS: dict[str, Any] = {
     c.TITLE: c
     for c in [
         # low level nodes
-        AdvancedBlender,
-        AdvancedBox,
-        AdvancedEraser,
-        AdvancedRecolor,
-        AdvancedSegment,
-        AdvancedShadow,
-        DownloadImage,
-        DownloadMask,
-        UploadImage,
-        UploadMask,
+        LowLevelBlender,
+        LowLevelBox,
+        LowLevelDownloadImage,
+        LowLevelDownloadMask,
+        LowLevelEraser,
+        LowLevelRecolor,
+        LowLevelSegment,
+        LowLevelShadow,
+        LowLevelUploadImage,
+        LowLevelUploadMask,
         # high level nodes
-        Blender,
-        Box,
-        Eraser,
-        InferMainSubject,
-        Recolor,
-        Segment,
-        Shadow,
+        HighLevelBlender,
+        HighLevelBox,
+        HighLevelEraser,
+        HighLevelInferMainSubject,
+        HighLevelRecolor,
+        HighLevelSegment,
+        HighLevelShadow,
         # utils nodes
         CreateBoundingBox,
         DrawBoundingBox,
         ImageCropBoundingBox,
         MaskCropBoundingBox,
         ApplyTransparencyMask,
-        API,
     ]
 }
 

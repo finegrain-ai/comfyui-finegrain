@@ -1,50 +1,26 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, get_args
 
-from ..utils.context import EditorAPIContext, StateID
+from ..utils.context import EditorAPIContext, ErrorResult, Mode, StateID, _get_ctx
 
 
 @dataclass(kw_only=True)
 class Params:
     image: StateID
     mask: StateID
-    mode: str
+    mode: Mode
     seed: int
 
 
-async def _process(
-    ctx: EditorAPIContext,
-    params: Params,
-) -> StateID:
-    assert params.mode in ["express", "standard", "premium"], "Invalid mode"
-    assert params.seed >= 0, "Seed must be a non-negative integer"
-
-    # queue skills/erase
-    stateid_erased = await ctx.skill_erase(
-        stateid_image=params.image,
-        stateid_mask=params.mask,
-        mode=params.mode,
-        seed=params.seed,
-    )
-
-    return stateid_erased
-
-
-class AdvancedEraser:
+class Eraser:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
             "required": {
-                "api": (
-                    "FG_API",
-                    {
-                        "tooltip": "The Finegrain API context",
-                    },
-                ),
                 "image": (
                     "STATEID",
                     {
-                        "tooltip": "The image statid to erase an object from",
+                        "tooltip": "The image stateid to erase an object from",
                     },
                 ),
                 "mask": (
@@ -53,13 +29,11 @@ class AdvancedEraser:
                         "tooltip": "The mask stateid of the object to erase",
                     },
                 ),
-            },
-            "optional": {
                 "mode": (
                     [
-                        "express",
-                        "standard",
                         "premium",
+                        "standard",
+                        "express",
                     ],
                 ),
                 "seed": (
@@ -77,22 +51,42 @@ class AdvancedEraser:
     RETURN_TYPES = ("STATEID",)
     RETURN_NAMES = ("image",)
 
-    TITLE = "[Advanced] Eraser"
+    TITLE = "[LOW-LEVEL] Eraser"
     DESCRIPTION = "Erase an object from an image using a mask."
-    CATEGORY = "Finegrain/skills"
+    CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
+
+    @staticmethod
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> StateID:
+        assert params.mode in get_args(Mode), f"Mode must be one of {get_args(Mode)}"
+        assert params.seed >= 0, "Seed must be a non-negative integer"
+
+        # call erase skill
+        result_erase = await ctx.call_async.erase(
+            image_state_id=params.image,
+            mask_state_id=params.mask,
+            mode=params.mode,
+            seed=params.seed,
+        )
+        if isinstance(result_erase, ErrorResult):
+            raise ValueError(f"Failed to erase object: {result_erase.error}")
+        stateid_erase = result_erase.state_id
+
+        return stateid_erase
 
     def process(
         self,
-        api: EditorAPIContext,
         image: StateID,
         mask: StateID,
-        mode: str,
+        mode: Mode,
         seed: int,
     ) -> tuple[StateID]:
         return (
-            api.run_one_sync(
-                co=_process,
+            _get_ctx().run_one_sync(
+                co=self._process,
                 params=Params(
                     image=image,
                     mask=mask,

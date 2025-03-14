@@ -3,11 +3,8 @@ from typing import Any
 
 import torch
 
-from ..utils.context import EditorAPIContext
-from ..utils.image import (
-    image_to_bytes,
-    tensor_to_image,
-)
+from ..utils.context import BoundingBox, EditorAPIContext, ErrorResult, _get_ctx
+from ..utils.image import tensor_to_image
 
 
 @dataclass(kw_only=True)
@@ -21,12 +18,6 @@ class Box:
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
             "required": {
-                "api": (
-                    "FG_API",
-                    {
-                        "tooltip": "The Finegrain API context",
-                    },
-                ),
                 "image": (
                     "IMAGE",
                     {
@@ -47,48 +38,43 @@ class Box:
 
     TITLE = "Box"
     DESCRIPTION = "Box an object in an image."
-    CATEGORY = "Finegrain/skills"
+    CATEGORY = "Finegrain/high-level"
     FUNCTION = "process"
 
     @staticmethod
     async def _process(
         ctx: EditorAPIContext,
         params: Params,
-    ) -> torch.Tensor:
+    ) -> BoundingBox:
         assert params.prompt, "Prompt must not be empty"
 
         # convert tensors to PIL images
-        image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))
+        pil_image = tensor_to_image(params.image.permute(0, 3, 1, 2))
 
         # make some assertions
-        assert image_pil.mode == "RGB", "Image must be RGB"
+        assert pil_image.mode == "RGB", "Image must be RGB"
 
-        # convert PIL images to BytesIO
-        image_bytes = image_to_bytes(image_pil)
+        # upload image
+        stateid_image = await ctx.call_async.upload_pil_image(pil_image)
 
-        # queue state/create
-        stateid_image = await ctx.create_state(file=image_bytes)
-
-        # queue skills/infer-bbox
-        stateid_bbox = await ctx.skill_bbox(
-            stateid_image=stateid_image,
+        # call bbox skill
+        result_bbox = await ctx.call_async.infer_bbox(
+            state_id=stateid_image,
             product_name=params.prompt,
         )
+        if isinstance(result_bbox, ErrorResult):
+            raise ValueError(f"Failed to detect object: {result_bbox.error}")
+        bbox = result_bbox.bbox
 
-        # get bbox state/meta
-        metadata_bbox = await ctx.get_meta(stateid_bbox)
-        bounding_box = metadata_bbox["bbox"]
-
-        return bounding_box
+        return bbox
 
     def process(
         self,
-        api: EditorAPIContext,
         image: torch.Tensor,
         prompt: str,
-    ) -> tuple[torch.Tensor]:
+    ) -> tuple[BoundingBox]:
         return (
-            api.run_one_sync(
+            _get_ctx().run_one_sync(
                 co=self._process,
                 params=Params(
                     image=image,

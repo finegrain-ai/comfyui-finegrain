@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..utils.bbox import BoundingBox
-from ..utils.context import EditorAPIContext, StateID
+from ..utils.context import EditorAPIContext, ErrorResult, StateID, _get_ctx
 
 
 @dataclass(kw_only=True)
@@ -12,37 +12,11 @@ class Params:
     cropped: bool
 
 
-async def _process(
-    ctx: EditorAPIContext,
-    params: Params,
-) -> StateID:
-    # queue skills/infer-bbox
-    stateid_mask = await ctx.skill_segment(
-        stateid_image=params.image,
-        bbox=params.bbox,
-    )
-
-    # queue skills/crop
-    if params.cropped:
-        stateid_mask = await ctx.skill_crop(
-            stateid_image=stateid_mask,
-            bbox=params.bbox,
-        )
-
-    return stateid_mask
-
-
-class AdvancedSegment:
+class Segment:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
             "required": {
-                "api": (
-                    "FG_API",
-                    {
-                        "tooltip": "The Finegrain API context",
-                    },
-                ),
                 "image": (
                     "STATEID",
                     {
@@ -55,8 +29,6 @@ class AdvancedSegment:
                         "tooltip": "Bounding box of the object to segment",
                     },
                 ),
-            },
-            "optional": {
                 "cropped": (
                     "BOOLEAN",
                     {
@@ -70,21 +42,46 @@ class AdvancedSegment:
     RETURN_TYPES = ("STATEID",)
     RETURN_NAMES = ("mask",)
 
-    TITLE = "[Advanced] Segment"
+    TITLE = "[Low level] Segment"
     DESCRIPTION = "Segment an object in an image."
-    CATEGORY = "Finegrain/skills"
+    CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
+
+    @staticmethod
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> StateID:
+        # call segment skill
+        result_segment = await ctx.call_async.segment(
+            state_id=params.image,
+            bbox=params.bbox,
+        )
+        if isinstance(result_segment, ErrorResult):
+            raise ValueError(f"Failed to segment object: {result_segment.error}")
+        stateid_segment = result_segment.state_id
+
+        if params.cropped:
+            # call crop skill
+            result_segment = await ctx.call_async.crop(
+                state_id=stateid_segment,
+                bbox=params.bbox,
+            )
+            if isinstance(result_segment, ErrorResult):
+                raise ValueError(f"Failed to crop object: {result_segment.error}")
+            stateid_segment = result_segment.state_id
+
+        return stateid_segment
 
     def process(
         self,
-        api: EditorAPIContext,
         image: StateID,
         bbox: BoundingBox,
         cropped: bool,
     ) -> tuple[StateID]:
         return (
-            api.run_one_sync(
-                co=_process,
+            _get_ctx().run_one_sync(
+                co=self._process,
                 params=Params(
                     image=image,
                     bbox=bbox,
