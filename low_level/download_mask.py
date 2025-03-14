@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 
 import torch
 
@@ -10,6 +10,8 @@ from ..utils.image import image_to_tensor
 @dataclass(kw_only=True)
 class Params:
     mask: StateID
+    image_format: Literal["JPEG", "PNG", "WEBP", "AUTO"]
+    resolution: Literal["FULL", "DISPLAY"]
 
 
 async def _process(
@@ -36,6 +38,20 @@ class DownloadMask:
                         "tooltip": "The mask stateid to download",
                     },
                 ),
+                "image_format": (
+                    [
+                        "AUTO",
+                        "JPEG",
+                        "PNG",
+                        "WEBP",
+                    ],
+                ),
+                "resolution": (
+                    [
+                        "FULL",
+                        "DISPLAY",
+                    ],
+                ),
             },
         }
 
@@ -50,10 +66,16 @@ class DownloadMask:
     def process(
         self,
         mask: StateID,
+        image_format: Literal["JPEG", "PNG", "WEBP", "AUTO"],
+        resolution: Literal["FULL", "DISPLAY"],
     ) -> tuple[torch.Tensor]:
         return (
             _get_ctx().run_one_sync(
                 co=_process,
-                params=Params(mask=mask),
+                params=Params(
+                    mask=mask,
+                    image_format=image_format,
+                    resolution=resolution,
+                ),
             ),
         )
