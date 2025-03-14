@@ -87,7 +87,7 @@ class Blender:
 
     TITLE = "Blender"
     DESCRIPTION = "Blend an object cutout into a scene."
-    CATEGORY = "Finegrain/skills"
+    CATEGORY = "Finegrain/high-level"
     FUNCTION = "process"
 
     @staticmethod

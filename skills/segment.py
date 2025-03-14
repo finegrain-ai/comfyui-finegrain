@@ -53,7 +53,7 @@ class Segment:
 
     TITLE = "Segment"
     DESCRIPTION = "Segment an object in an image."
-    CATEGORY = "Finegrain/skills"
+    CATEGORY = "Finegrain/high-level"
     FUNCTION = "process"
 
     @staticmethod

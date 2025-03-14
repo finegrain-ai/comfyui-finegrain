@@ -50,7 +50,7 @@ class Recolor:
 
     TITLE = "Recolor"
     DESCRIPTION = "Recolor a masked object in an image."
-    CATEGORY = "Finegrain/skills"
+    CATEGORY = "Finegrain/high-level"
     FUNCTION = "process"
 
     @staticmethod

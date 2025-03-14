@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..utils.bbox import BoundingBox
-from ..utils.context import EditorAPIContext, StateID
+from ..utils.context import EditorAPIContext, ErrorResult, StateID, _get_ctx
 
 
 @dataclass(kw_only=True)
@@ -21,19 +21,25 @@ async def _process(ctx: EditorAPIContext, params: Params) -> StateID:
     assert params.height >= 8, "Height must be at least 8"
 
     # queue skills/shadow
-    stateid_shadow = await ctx.skill_shadow(
-        stateid_cutout=params.cutout,
+    result_shadow = await ctx.call_async.shadow(
+        state_id=params.cutout,
         resolution=(params.width, params.height),
         bbox=params.bbox,
         seed=params.seed,
     )
+    if isinstance(result_shadow, ErrorResult):
+        raise ValueError(f"Failed to create shadow: {result_shadow.error}")
+    stateid_shadow = result_shadow.state_id
 
     # queue skills/set-background-color
     if params.bgcolor and params.bgcolor != "transparent":
-        stateid_shadow = await ctx.skill_set_bgcolor(
-            stateid_image=stateid_shadow,
-            color=params.bgcolor,
+        result_bgcolor = await ctx.call_async.set_background_color(
+            state_id=stateid_shadow,
+            background=params.bgcolor,
         )
+        if isinstance(result_bgcolor, ErrorResult):
+            raise ValueError(f"Failed to set background color: {result_bgcolor.error}")
+        stateid_shadow = result_bgcolor.state_id
 
     return stateid_shadow
 
@@ -43,12 +49,6 @@ class AdvancedShadow:
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
             "required": {
-                "api": (
-                    "FG_API",
-                    {
-                        "tooltip": "The Finegrain API context",
-                    },
-                ),
                 "cutout": (
                     "STATEID",
                     {
@@ -105,14 +105,13 @@ class AdvancedShadow:
     RETURN_TYPES = ("STATEID",)
     RETURN_NAMES = ("image",)
 
-    TITLE = "[Advanced] Shadow"
+    TITLE = "[Low level] Shadow"
     DESCRIPTION = "Create a shadow packshot from a cutout."
-    CATEGORY = "Finegrain/skills"
+    CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
 
     def process(
         self,
-        api: EditorAPIContext,
         cutout: StateID,
         width: int,
         height: int,
@@ -121,7 +120,7 @@ class AdvancedShadow:
         bbox: BoundingBox | None = None,
     ) -> tuple[StateID]:
         return (
-            api.run_one_sync(
+            _get_ctx().run_one_sync(
                 co=_process,
                 params=Params(
                     cutout=cutout,

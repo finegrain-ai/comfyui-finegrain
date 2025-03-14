@@ -85,7 +85,7 @@ class Shadow:
 
     TITLE = "Shadow"
     DESCRIPTION = "Create a shadow packshot from a cutout."
-    CATEGORY = "Finegrain/skills"
+    CATEGORY = "Finegrain/high-level"
     FUNCTION = "process"
 
     @staticmethod

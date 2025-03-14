@@ -58,7 +58,7 @@ class Eraser:
 
     TITLE = "Eraser"
     DESCRIPTION = "Erase an object from an image using a mask."
-    CATEGORY = "Finegrain/skills"
+    CATEGORY = "Finegrain/high-level"
     FUNCTION = "process"
 
     @staticmethod
@@ -67,7 +67,7 @@ class Eraser:
         params: Params,
     ) -> torch.Tensor:
         assert params.mode in get_args(Mode), f"Mode must be one of {get_args(Mode)}"
-        assert params.seed >= 0, "Seed must be a non-negative integer"
+        assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
 
         # convert tensors to PIL images
         image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))

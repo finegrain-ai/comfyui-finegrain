@@ -34,7 +34,7 @@ class InferMainSubject:
 
     TITLE = "Infer Main Subject"
     DESCRIPTION = "Infer the main subject in an image."
-    CATEGORY = "Finegrain/skills"
+    CATEGORY = "Finegrain/high-level"
     FUNCTION = "process"
 
     @staticmethod

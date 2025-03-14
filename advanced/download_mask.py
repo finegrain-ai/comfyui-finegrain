@@ -3,7 +3,7 @@ from typing import Any
 
 import torch
 
-from ..utils.context import EditorAPIContext, StateID
+from ..utils.context import EditorAPIContext, StateID, _get_ctx
 from ..utils.image import image_to_tensor
 
 
@@ -17,7 +17,7 @@ async def _process(
     params: Params,
 ) -> torch.Tensor:
     # queue state/create
-    mask_pil = await ctx.download_image(params.mask)
+    mask_pil = await ctx.call_async.download_image(params.mask)
 
     # convert to tensor
     mask_tensor = image_to_tensor(mask_pil).squeeze(0)
@@ -30,12 +30,6 @@ class DownloadMask:
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
             "required": {
-                "api": (
-                    "FG_API",
-                    {
-                        "tooltip": "The Finegrain API context",
-                    },
-                ),
                 "mask": (
                     "STATEID",
                     {
@@ -48,18 +42,17 @@ class DownloadMask:
     RETURN_TYPES = ("MASK",)
     RETURN_NAMES = ("mask",)
 
-    TITLE = "[Advanced] Download Mask"
+    TITLE = "[Low level] Download Mask"
     DESCRIPTION = "Download an image from a state id."
     CATEGORY = "Finegrain/advanced"
     FUNCTION = "process"
 
     def process(
         self,
-        api: EditorAPIContext,
         mask: StateID,
     ) -> tuple[torch.Tensor]:
         return (
-            api.run_one_sync(
+            _get_ctx().run_one_sync(
                 co=_process,
                 params=Params(mask=mask),
             ),

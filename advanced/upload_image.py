@@ -3,7 +3,7 @@ from typing import Any
 
 import torch
 
-from ..utils.context import EditorAPIContext, StateID
+from ..utils.context import EditorAPIContext, StateID, _get_ctx
 from ..utils.image import (
     image_to_bytes,
     tensor_to_image,
@@ -29,7 +29,7 @@ async def _process(
     image_bytes = image_to_bytes(image_pil)
 
     # queue state/create
-    stateid_image = await ctx.create_state(file=image_bytes)
+    stateid_image = await ctx.call_async.upload_image(file=image_bytes)
 
     return stateid_image
 
@@ -39,12 +39,6 @@ class UploadImage:
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
             "required": {
-                "api": (
-                    "FG_API",
-                    {
-                        "tooltip": "The Finegrain API context",
-                    },
-                ),
                 "image": (
                     "IMAGE",
                     {
@@ -57,18 +51,17 @@ class UploadImage:
     RETURN_TYPES = ("STATEID",)
     RETURN_NAMES = ("image",)
 
-    TITLE = "[Advanced] Upload Image"
+    TITLE = "[Low level] Upload Image"
     DESCRIPTION = "Create a new state id from an image."
     CATEGORY = "Finegrain/advanced"
     FUNCTION = "process"
 
     def process(
         self,
-        api: EditorAPIContext,
         image: torch.Tensor,
     ) -> tuple[StateID]:
         return (
-            api.run_one_sync(
+            _get_ctx().run_one_sync(
                 co=_process,
                 params=Params(image=image),
             ),
