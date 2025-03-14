@@ -38,7 +38,7 @@ async def _process(
     return stateid_segment
 
 
-class AdvancedSegment:
+class Segment:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {

@@ -38,7 +38,7 @@ async def _process(ctx: EditorAPIContext, params: Params) -> StateID:
     return stateid_erase
 
 
-class AdvancedBlender:
+class Blender:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {

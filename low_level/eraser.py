@@ -33,7 +33,7 @@ async def _process(
     return stateid_erase
 
 
-class AdvancedEraser:
+class Eraser:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {

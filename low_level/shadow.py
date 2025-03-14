@@ -44,7 +44,7 @@ async def _process(ctx: EditorAPIContext, params: Params) -> StateID:
     return stateid_shadow
 
 
-class AdvancedShadow:
+class Shadow:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {

@@ -25,7 +25,7 @@ async def _process(ctx: EditorAPIContext, params: Params) -> StateID:
     return stateid_recolor
 
 
-class AdvancedRecolor:
+class Recolor:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {

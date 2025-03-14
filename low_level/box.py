@@ -29,7 +29,7 @@ async def _process(
     return bbox
 
 
-class AdvancedBox:
+class Box:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
