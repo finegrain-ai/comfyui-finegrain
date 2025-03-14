@@ -5,7 +5,6 @@ import torch
 
 from ..utils.context import EditorAPIContext, StateID, _get_ctx
 from ..utils.image import (
-    image_to_bytes,
     tensor_to_image,
 )
 
@@ -20,16 +19,13 @@ async def _process(
     params: Params,
 ) -> StateID:
     # convert tensors to PIL images
-    mask_pil = tensor_to_image(params.mask.unsqueeze(0))
+    pil_mask = tensor_to_image(params.mask.unsqueeze(0))
 
     # make some assertions
-    assert mask_pil.mode == "L", "Mask must be L mode"
-
-    # convert PIL images to BytesIO
-    mask_bytes = image_to_bytes(mask_pil)
+    assert pil_mask.mode == "L", "Mask must be L mode"
 
     # upload the mask to the API
-    stateid_mask = await ctx.call_async.upload_image(file=mask_bytes)
+    stateid_mask = await ctx.call_async.upload_pil_image(pil_mask)
 
     return stateid_mask
 

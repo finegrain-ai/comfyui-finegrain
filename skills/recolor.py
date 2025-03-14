@@ -5,7 +5,6 @@ import torch
 
 from ..utils.context import EditorAPIContext, ErrorResult, _get_ctx
 from ..utils.image import (
-    image_to_bytes,
     image_to_tensor,
     tensor_to_image,
 )
@@ -56,21 +55,17 @@ class Recolor:
     @staticmethod
     async def _process(ctx: EditorAPIContext, params: Params) -> torch.Tensor:
         # convert tensors to PIL images
-        image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))
-        mask_pil = tensor_to_image(params.mask.unsqueeze(0))
+        pil_image = tensor_to_image(params.image.permute(0, 3, 1, 2))
+        pil_mask = tensor_to_image(params.mask.unsqueeze(0))
 
         # make some assertions
-        assert image_pil.size == mask_pil.size, "Image and mask sizes do not match"
-        assert image_pil.mode == "RGB", "Image must be RGB"
-        assert mask_pil.mode == "L", "Mask must be grayscale"
-
-        # convert PIL images to BytesIO
-        image_bytes = image_to_bytes(image_pil)
-        mask_bytes = image_to_bytes(mask_pil)
+        assert pil_image.size == pil_mask.size, "Image and mask sizes do not match"
+        assert pil_image.mode == "RGB", "Image must be RGB"
+        assert pil_mask.mode == "L", "Mask must be grayscale"
 
         # upload image and mask
-        stateid_image = await ctx.call_async.upload_image(file=image_bytes)
-        stateid_mask = await ctx.call_async.upload_image(file=mask_bytes)
+        stateid_image = await ctx.call_async.upload_pil_image(pil_image)
+        stateid_mask = await ctx.call_async.upload_pil_image(pil_mask)
 
         # call recolor skill
         result_recolor = await ctx.call_async.recolor(
@@ -83,12 +78,12 @@ class Recolor:
         stateid_recolor = result_recolor.state_id
 
         # download output image
-        recolored_image = await ctx.call_async.download_image(stateid_recolor)
+        pil_output = await ctx.call_async.download_pil_image(stateid_recolor)
 
         # convert PIL image to tensor
-        recolored_tensor = image_to_tensor(recolored_image).permute(0, 2, 3, 1)
+        tensor_output = image_to_tensor(pil_output).permute(0, 2, 3, 1)
 
-        return recolored_tensor
+        return tensor_output
 
     def process(
         self,

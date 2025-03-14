@@ -1,4 +1,3 @@
-import io
 from typing import Any
 
 import numpy as np
@@ -41,12 +40,6 @@ def image_to_tensor(image: Image.Image) -> torch.Tensor:
             raise ValueError(f"Unsupported image mode: {image.mode}")
 
     return tensor.unsqueeze(0)
-
-
-def image_to_bytes(image: Image.Image) -> io.BytesIO:
-    data = io.BytesIO()
-    image.save(data, format="PNG", optimize=True)
-    return data
 
 
 class ApplyTransparencyMask:

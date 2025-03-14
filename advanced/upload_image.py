@@ -5,7 +5,6 @@ import torch
 
 from ..utils.context import EditorAPIContext, StateID, _get_ctx
 from ..utils.image import (
-    image_to_bytes,
     tensor_to_image,
 )
 
@@ -20,16 +19,13 @@ async def _process(
     params: Params,
 ) -> StateID:
     # convert tensors to PIL images
-    image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))
+    pil_image = tensor_to_image(params.image.permute(0, 3, 1, 2))
 
     # make some assertions
-    assert image_pil.mode in ["RGB", "RGBA"], "Image must be RGB or RGBA"
-
-    # convert PIL images to BytesIO
-    image_bytes = image_to_bytes(image_pil)
+    assert pil_image.mode in ["RGB", "RGBA"], "Image must be RGB or RGBA"
 
     # upload the image to the API
-    stateid_image = await ctx.call_async.upload_image(file=image_bytes)
+    stateid_image = await ctx.call_async.upload_pil_image(pil_image)
 
     return stateid_image
 

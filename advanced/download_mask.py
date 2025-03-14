@@ -17,12 +17,12 @@ async def _process(
     params: Params,
 ) -> torch.Tensor:
     # download the image from the API
-    mask_pil = await ctx.call_async.download_image(params.mask)
+    pil_mask = await ctx.call_async.download_pil_image(params.mask)
 
     # convert to tensor
-    mask_tensor = image_to_tensor(mask_pil).squeeze(0)
+    tensor_mask = image_to_tensor(pil_mask).squeeze(0)
 
-    return mask_tensor
+    return tensor_mask
 
 
 class DownloadMask:

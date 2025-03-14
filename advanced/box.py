@@ -24,9 +24,9 @@ async def _process(
     )
     if isinstance(result_bbox, ErrorResult):
         raise ValueError(f"Failed to infer bounding box: {result_bbox.error}")
-    bounding_box = result_bbox.bbox
+    bbox = result_bbox.bbox
 
-    return bounding_box
+    return bbox
 
 
 class AdvancedBox:

@@ -6,7 +6,6 @@ import torch
 from ..utils.bbox import BoundingBox
 from ..utils.context import EditorAPIContext, ErrorResult, _get_ctx
 from ..utils.image import (
-    image_to_bytes,
     image_to_tensor,
     tensor_to_image,
 )
@@ -60,16 +59,13 @@ class Segment:
         params: Params,
     ) -> torch.Tensor:
         # convert tensors to PIL images
-        image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))
+        pil_image = tensor_to_image(params.image.permute(0, 3, 1, 2))
 
         # make some assertions
-        assert image_pil.mode == "RGB", "Image must be RGB"
-
-        # convert PIL images to BytesIO
-        image_bytes = image_to_bytes(image_pil)
+        assert pil_image.mode == "RGB", "Image must be RGB"
 
         # upload image
-        stateid_image = await ctx.call_async.upload_image(file=image_bytes)
+        stateid_image = await ctx.call_async.upload_pil_image(pil_image)
 
         # call segment skill
         result_segment = await ctx.call_async.segment(
@@ -91,11 +87,12 @@ class Segment:
             stateid_mask = result_crop.state_id
 
         # download mask
-        mask = await ctx.call_async.download_image(stateid_mask)
+        pil_output = await ctx.call_async.download_pil_image(stateid_mask)
 
         # convert PIL image to tensor
-        mask_tensor = image_to_tensor(mask).squeeze(0)
-        return mask_tensor
+        tensor_output = image_to_tensor(pil_output).squeeze(0)
+
+        return tensor_output
 
     def process(
         self,

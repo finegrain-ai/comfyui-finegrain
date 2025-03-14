@@ -1216,7 +1216,13 @@ class EditorApiAsyncClient:
             return await self._response_with_image(st, ok, SetBackgroundColorResultWithImage, params=image_params)
         return await self._response(st, ok, SetBackgroundColorResult)
 
-    async def download_image(self, st: StateID) -> Image.Image:
+    async def upload_pil_image(self, image: Image.Image) -> StateID:
+        data = io.BytesIO()
+        image.save(data, format="PNG", optimize=True)
+        response = await self.ctx.request("POST", "state/upload", files={"file": data})
+        return response.json()["state"]
+
+    async def download_pil_image(self, st: StateID) -> Image.Image:
         response = await self.ctx.get_image(st)
         return Image.open(io.BytesIO(response))
 

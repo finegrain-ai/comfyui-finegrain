@@ -5,7 +5,6 @@ import torch
 
 from ..utils.context import BoundingBox, EditorAPIContext, ErrorResult, _get_ctx
 from ..utils.image import (
-    image_to_bytes,
     tensor_to_image,
 )
 
@@ -52,16 +51,13 @@ class Box:
         assert params.prompt, "Prompt must not be empty"
 
         # convert tensors to PIL images
-        image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))
+        pil_image = tensor_to_image(params.image.permute(0, 3, 1, 2))
 
         # make some assertions
-        assert image_pil.mode == "RGB", "Image must be RGB"
-
-        # convert PIL images to BytesIO
-        image_bytes = image_to_bytes(image_pil)
+        assert pil_image.mode == "RGB", "Image must be RGB"
 
         # upload image
-        stateid_image = await ctx.call_async.upload_image(file=image_bytes)
+        stateid_image = await ctx.call_async.upload_pil_image(pil_image)
 
         # call bbox skill
         result_bbox = await ctx.call_async.infer_bbox(
@@ -70,8 +66,9 @@ class Box:
         )
         if isinstance(result_bbox, ErrorResult):
             raise ValueError(f"Failed to detect object: {result_bbox.error}")
+        bbox = result_bbox.bbox
 
-        return result_bbox.bbox
+        return bbox
 
     def process(
         self,

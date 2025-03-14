@@ -6,7 +6,6 @@ import torch
 from ..utils.bbox import BoundingBox
 from ..utils.context import EditorAPIContext, ErrorResult, _get_ctx
 from ..utils.image import (
-    image_to_bytes,
     image_to_tensor,
     tensor_to_image,
 )
@@ -95,16 +94,13 @@ class Shadow:
         assert params.height >= 8, "Height must be at least 8"
 
         # convert tensors to PIL images
-        cutout_pil = tensor_to_image(params.cutout.permute(0, 3, 1, 2))
+        pil_cutout = tensor_to_image(params.cutout.permute(0, 3, 1, 2))
 
         # make some assertions
-        assert cutout_pil.mode == "RGBA", "Cutout must be RGBA"
-
-        # convert PIL images to BytesIO
-        cutout_bytes = image_to_bytes(cutout_pil)
+        assert pil_cutout.mode == "RGBA", "Cutout must be RGBA"
 
         # upload cutout
-        stateid_cutout = await ctx.call_async.upload_image(file=cutout_bytes)
+        stateid_cutout = await ctx.call_async.upload_pil_image(pil_cutout)
 
         # call shadow skill
         result_shadow = await ctx.call_async.shadow(
@@ -128,12 +124,12 @@ class Shadow:
             stateid_shadow = result_bgcolor.state_id
 
         # download output image
-        shadow_image = await ctx.call_async.download_image(stateid_shadow)
+        pil_output = await ctx.call_async.download_pil_image(stateid_shadow)
 
         # convert PIL image to tensor
-        shadow_tensor = image_to_tensor(shadow_image).permute(0, 2, 3, 1)
+        tensor_output = image_to_tensor(pil_output).permute(0, 2, 3, 1)
 
-        return shadow_tensor
+        return tensor_output
 
     def process(
         self,

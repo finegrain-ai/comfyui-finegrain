@@ -81,7 +81,7 @@ class AdvancedEraser:
         self,
         image: StateID,
         mask: StateID,
-        mode: str,
+        mode: Mode,
         seed: int,
     ) -> tuple[StateID]:
         return (

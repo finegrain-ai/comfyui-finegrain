@@ -5,7 +5,6 @@ import torch
 
 from ..utils.context import EditorAPIContext, ErrorResult, _get_ctx
 from ..utils.image import (
-    image_to_bytes,
     tensor_to_image,
 )
 
@@ -43,23 +42,21 @@ class InferMainSubject:
         params: Params,
     ) -> str:
         # convert tensors to PIL images
-        image_pil = tensor_to_image(params.image.permute(0, 3, 1, 2))
+        pil_image = tensor_to_image(params.image.permute(0, 3, 1, 2))
 
         # make some assertions
-        assert image_pil.mode == "RGB", "Image must be RGB"
-
-        # convert PIL images to BytesIO
-        image_bytes = image_to_bytes(image_pil)
+        assert pil_image.mode == "RGB", "Image must be RGB"
 
         # upload image
-        stateid_image = await ctx.call_async.upload_image(file=image_bytes)
+        stateid_image = await ctx.call_async.upload_pil_image(pil_image)
 
         # call infer-main-subject skill
         result_subject = await ctx.call_async.infer_main_subject(state_id=stateid_image)
         if isinstance(result_subject, ErrorResult):
             raise ValueError(f"Failed to infer main subject: {result_subject.error}")
+        name = result_subject.main_subject
 
-        return result_subject.main_subject
+        return name
 
     def process(
         self,

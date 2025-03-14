@@ -17,12 +17,12 @@ async def _process(
     params: Params,
 ) -> torch.Tensor:
     # download the image from the API
-    image_pil = await ctx.call_async.download_image(params.image)
+    pil_image = await ctx.call_async.download_pil_image(params.image)
 
     # convert to tensor
-    image_tensor = image_to_tensor(image_pil).permute(0, 2, 3, 1)
+    tensor_image = image_to_tensor(pil_image).permute(0, 2, 3, 1)
 
-    return image_tensor
+    return tensor_image
 
 
 class DownloadImage:

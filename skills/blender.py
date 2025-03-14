@@ -6,7 +6,6 @@ import torch
 from ..utils.bbox import BoundingBox
 from ..utils.context import EditorAPIContext, ErrorResult, Mode, _get_ctx
 from ..utils.image import (
-    image_to_bytes,
     image_to_tensor,
     tensor_to_image,
 )
@@ -98,20 +97,16 @@ class Blender:
         assert -360 <= params.rotation_angle <= 360, "Rotation angle must be between -360 and 360"
 
         # convert tensors to PIL images
-        scene_pil = tensor_to_image(params.scene.permute(0, 3, 1, 2))
-        cutout_pil = tensor_to_image(params.cutout.permute(0, 3, 1, 2))
+        pil_scene = tensor_to_image(params.scene.permute(0, 3, 1, 2))
+        pil_cutout = tensor_to_image(params.cutout.permute(0, 3, 1, 2))
 
         # make some assertions
-        assert scene_pil.mode == "RGB", "Background must be RGB"
-        assert cutout_pil.mode == "RGBA", "Cutout must be RGBA"
-
-        # convert PIL images to BytesIO
-        scene_bytes = image_to_bytes(scene_pil)
-        cutout_bytes = image_to_bytes(cutout_pil)
+        assert pil_scene.mode == "RGB", "Background must be RGB"
+        assert pil_cutout.mode == "RGBA", "Cutout must be RGBA"
 
         # upload image and cutout
-        stateid_scene = await ctx.call_async.upload_image(file=scene_bytes)
-        stateid_cutout = await ctx.call_async.upload_image(file=cutout_bytes)
+        stateid_scene = await ctx.call_async.upload_pil_image(pil_scene)
+        stateid_cutout = await ctx.call_async.upload_pil_image(pil_cutout)
 
         # call blend skill
         result_blend = await ctx.call_async.blend(
@@ -128,12 +123,12 @@ class Blender:
         stateid_blend = result_blend.state_id
 
         # download output image
-        image_erase = await ctx.call_async.download_image(stateid_blend)
+        pil_output = await ctx.call_async.download_pil_image(stateid_blend)
 
         # convert PIL image to tensor
-        tensor_erase = image_to_tensor(image_erase).permute(0, 2, 3, 1)
+        tensor_output = image_to_tensor(pil_output).permute(0, 2, 3, 1)
 
-        return tensor_erase
+        return tensor_output
 
     def process(
         self,
