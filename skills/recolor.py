@@ -4,10 +4,7 @@ from typing import Any
 import torch
 
 from ..utils.context import EditorAPIContext, ErrorResult, _get_ctx
-from ..utils.image import (
-    image_to_tensor,
-    tensor_to_image,
-)
+from ..utils.image import image_to_tensor, tensor_to_image
 
 
 @dataclass(kw_only=True)

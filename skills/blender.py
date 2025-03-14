@@ -5,10 +5,7 @@ import torch
 
 from ..utils.bbox import BoundingBox
 from ..utils.context import EditorAPIContext, ErrorResult, Mode, _get_ctx
-from ..utils.image import (
-    image_to_tensor,
-    tensor_to_image,
-)
+from ..utils.image import image_to_tensor, tensor_to_image
 
 
 @dataclass(kw_only=True)

@@ -4,9 +4,7 @@ from typing import Any
 import torch
 
 from ..utils.context import EditorAPIContext, StateID, _get_ctx
-from ..utils.image import (
-    tensor_to_image,
-)
+from ..utils.image import tensor_to_image
 
 
 @dataclass(kw_only=True)
