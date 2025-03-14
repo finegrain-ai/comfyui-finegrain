@@ -46,7 +46,7 @@ class DownloadMask:
     RETURN_NAMES = ("mask",)
 
     TITLE = "[Low level] Download Mask"
-    DESCRIPTION = "Download an image from a state id."
+    DESCRIPTION = "Download a mask from a state id."
     CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
 
