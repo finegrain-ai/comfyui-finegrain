@@ -8,6 +8,7 @@ import json
 import logging
 import random
 import re
+import tomllib
 from collections import defaultdict
 from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
 from functools import cache
@@ -1248,11 +1249,22 @@ def _get_ctx() -> EditorAPIContext:
     assert priority in get_args(Priority), f"invalid priority {priority}, must be one of {get_args(Priority)}"
     priority = cast(Priority, priority)
 
+    pyproject_path = Path(__file__).parent.parent / "pyproject.toml"
+    if not pyproject_path.exists():
+        raise FileNotFoundError(f"pyproject.toml not found at {pyproject_path}")
+
+    with pyproject_path.open("rb") as f:
+        pyproject = tomllib.load(f)
+
+    name = pyproject["project"]["name"]
+    version = pyproject["project"]["version"]
+    user_agent = f"{name}/{version}"
+
     ctx = EditorAPIContext(
         credentials=credentials,
         priority=priority,
         default_timeout=timeout,
-        user_agent="comfyui-finegrain/1.4.0",
+        user_agent=user_agent,
     )
 
     return ctx
