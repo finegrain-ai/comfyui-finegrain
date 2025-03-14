@@ -18,7 +18,7 @@ class Params:
     width: int
     height: int
     seed: int
-    bgcolor: str | None
+    bgcolor: str
     bbox: BoundingBox | None
 
 
@@ -62,8 +62,6 @@ class Shadow:
                         "tooltip": "Seed for the random number generator.",
                     },
                 ),
-            },
-            "optional": {
                 "bgcolor": (
                     "STRING",
                     {
@@ -71,6 +69,8 @@ class Shadow:
                         "tooltip": "Background color of the shadow.",
                     },
                 ),
+            },
+            "optional": {
                 "bbox": (
                     "BBOX",
                     {
@@ -117,8 +117,8 @@ class Shadow:
             raise ValueError(f"Failed to create shadow: {result_shadow.error}")
         stateid_shadow = result_shadow.state_id
 
-        # apply background color
-        if params.bgcolor and params.bgcolor != "transparent":
+        if params.bgcolor != "transparent":
+            # call set_background_color skill
             result_bgcolor = await ctx.call_async.set_background_color(
                 state_id=stateid_shadow,
                 background=params.bgcolor,
@@ -141,7 +141,7 @@ class Shadow:
         width: int,
         height: int,
         seed: int,
-        bgcolor: str | None = None,
+        bgcolor: str,
         bbox: BoundingBox | None = None,
     ) -> tuple[torch.Tensor]:
         return (

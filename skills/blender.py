@@ -52,8 +52,6 @@ class Blender:
                         "express",
                     ],
                 ),
-            },
-            "optional": {
                 "flip": (
                     "BOOLEAN",
                     {

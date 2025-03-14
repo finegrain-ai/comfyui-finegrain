@@ -57,8 +57,6 @@ class AdvancedEraser:
                         "express",
                     ],
                 ),
-            },
-            "optional": {
                 "seed": (
                     "INT",
                     {

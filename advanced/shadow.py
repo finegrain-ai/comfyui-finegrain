@@ -11,7 +11,7 @@ class Params:
     width: int
     height: int
     seed: int
-    bgcolor: str | None
+    bgcolor: str
     bbox: BoundingBox | None
 
 
@@ -31,7 +31,7 @@ async def _process(ctx: EditorAPIContext, params: Params) -> StateID:
         raise ValueError(f"Failed to create shadow: {result_shadow.error}")
     stateid_shadow = result_shadow.state_id
 
-    if params.bgcolor and params.bgcolor != "transparent":
+    if params.bgcolor != "transparent":
         # call set_background_color skill
         result_bgcolor = await ctx.call_async.set_background_color(
             state_id=stateid_shadow,
@@ -84,8 +84,6 @@ class AdvancedShadow:
                         "tooltip": "Seed for the random number generator.",
                     },
                 ),
-            },
-            "optional": {
                 "bgcolor": (
                     "STRING",
                     {
@@ -93,6 +91,8 @@ class AdvancedShadow:
                         "tooltip": "Background color of the shadow.",
                     },
                 ),
+            },
+            "optional": {
                 "bbox": (
                     "BBOX",
                     {
@@ -116,7 +116,7 @@ class AdvancedShadow:
         width: int,
         height: int,
         seed: int,
-        bgcolor: str | None = None,
+        bgcolor: str,
         bbox: BoundingBox | None = None,
     ) -> tuple[StateID]:
         return (

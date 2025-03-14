@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, get_args
 
 from ..utils.bbox import BoundingBox
-from ..utils.context import EditorAPIContext, Mode, StateID
+from ..utils.context import EditorAPIContext, ErrorResult, Mode, StateID
 
 
 @dataclass(kw_only=True)
@@ -67,8 +67,6 @@ class AdvancedBlender:
                         "express",
                     ],
                 ),
-            },
-            "optional": {
                 "flip": (
                     "BOOLEAN",
                     {

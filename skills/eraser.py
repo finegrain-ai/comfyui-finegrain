@@ -39,8 +39,6 @@ class Eraser:
                         "express",
                     ],
                 ),
-            },
-            "optional": {
                 "seed": (
                     "INT",
                     {

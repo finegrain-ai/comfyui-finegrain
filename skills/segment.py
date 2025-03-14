@@ -36,8 +36,6 @@ class Segment:
                         "tooltip": "Bounding box of the object to segment",
                     },
                 ),
-            },
-            "optional": {
                 "cropped": (
                     "BOOLEAN",
                     {
