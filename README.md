@@ -32,6 +32,8 @@ Installing the nodes is pretty straight forward, check out our [Discord server](
 
 2. Ensure you have [Git](https://git-scm.com/) installed.
 
+3. Ensure you have [ComfyUI](https://github.com/comfyanonymous/ComfyUI) installed.
+
 ### ComfyUI Manager installation (recommended)
 
 1. Ensure you have [ComfyUI Manager](https://github.com/ltdrdata/ComfyUI-Manager?tab=readme-ov-file#comfyui-manager) installed.
@@ -68,7 +70,6 @@ pip install -r custom_nodes/comfyui-finegrain/requirements.txt
 
 On Windows:
 ```shell
-.\python_embeded\Scripts\pip.exe install hatchling
 .\python_embeded\Scripts\pip.exe install -r .\ComfyUI\custom_nodes\comfyui-finegrain\requirements.txt
 ```
 
@@ -93,7 +94,6 @@ pip install -r custom_nodes/comfyui-finegrain/requirements.txt
 
 On Windows:
 ```shell
-.\python_embeded\Scripts\pip.exe install hatchling
 .\python_embeded\Scripts\pip.exe install -r .\ComfyUI\custom_nodes\comfyui-finegrain\requirements.txt
 ```
 
