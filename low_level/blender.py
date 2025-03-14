@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, get_args
 
 from ..utils.bbox import BoundingBox
-from ..utils.context import EditorAPIContext, ErrorResult, Mode, StateID
+from ..utils.context import EditorAPIContext, ErrorResult, Mode, StateID, _get_ctx
 
 
 @dataclass(kw_only=True)
@@ -105,7 +105,6 @@ class Blender:
 
     def process(
         self,
-        api: EditorAPIContext,
         scene: StateID,
         cutout: StateID,
         bbox: BoundingBox,
@@ -115,7 +114,7 @@ class Blender:
         seed: int,
     ) -> tuple[StateID]:
         return (
-            api.run_one_sync(
+            _get_ctx().run_one_sync(
                 co=_process,
                 params=Params(
                     scene=scene,
