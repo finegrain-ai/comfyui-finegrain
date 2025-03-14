@@ -12,32 +12,6 @@ class Params:
     cropped: bool
 
 
-async def _process(
-    ctx: EditorAPIContext,
-    params: Params,
-) -> StateID:
-    # call segment skill
-    result_segment = await ctx.call_async.segment(
-        state_id=params.image,
-        bbox=params.bbox,
-    )
-    if isinstance(result_segment, ErrorResult):
-        raise ValueError(f"Failed to segment object: {result_segment.error}")
-    stateid_segment = result_segment.state_id
-
-    if params.cropped:
-        # call crop skill
-        result_segment = await ctx.call_async.crop(
-            state_id=stateid_segment,
-            bbox=params.bbox,
-        )
-        if isinstance(result_segment, ErrorResult):
-            raise ValueError(f"Failed to crop object: {result_segment.error}")
-        stateid_segment = result_segment.state_id
-
-    return stateid_segment
-
-
 class Segment:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
@@ -73,6 +47,32 @@ class Segment:
     CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
 
+    @staticmethod
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> StateID:
+        # call segment skill
+        result_segment = await ctx.call_async.segment(
+            state_id=params.image,
+            bbox=params.bbox,
+        )
+        if isinstance(result_segment, ErrorResult):
+            raise ValueError(f"Failed to segment object: {result_segment.error}")
+        stateid_segment = result_segment.state_id
+
+        if params.cropped:
+            # call crop skill
+            result_segment = await ctx.call_async.crop(
+                state_id=stateid_segment,
+                bbox=params.bbox,
+            )
+            if isinstance(result_segment, ErrorResult):
+                raise ValueError(f"Failed to crop object: {result_segment.error}")
+            stateid_segment = result_segment.state_id
+
+        return stateid_segment
+
     def process(
         self,
         image: StateID,
@@ -81,7 +81,7 @@ class Segment:
     ) -> tuple[StateID]:
         return (
             _get_ctx().run_one_sync(
-                co=_process,
+                co=self._process,
                 params=Params(
                     image=image,
                     bbox=bbox,

@@ -15,35 +15,6 @@ class Params:
     bbox: BoundingBox | None
 
 
-async def _process(ctx: EditorAPIContext, params: Params) -> StateID:
-    assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
-    assert params.width >= 8, "Width must be at least 8"
-    assert params.height >= 8, "Height must be at least 8"
-
-    # call shadow skill
-    result_shadow = await ctx.call_async.shadow(
-        state_id=params.cutout,
-        resolution=(params.width, params.height),
-        bbox=params.bbox,
-        seed=params.seed,
-    )
-    if isinstance(result_shadow, ErrorResult):
-        raise ValueError(f"Failed to create shadow: {result_shadow.error}")
-    stateid_shadow = result_shadow.state_id
-
-    if params.bgcolor != "transparent":
-        # call set_background_color skill
-        result_bgcolor = await ctx.call_async.set_background_color(
-            state_id=stateid_shadow,
-            background=params.bgcolor,
-        )
-        if isinstance(result_bgcolor, ErrorResult):
-            raise ValueError(f"Failed to set background color: {result_bgcolor.error}")
-        stateid_shadow = result_bgcolor.state_id
-
-    return stateid_shadow
-
-
 class Shadow:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
@@ -110,6 +81,38 @@ class Shadow:
     CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
 
+    @staticmethod
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> StateID:
+        assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
+        assert params.width >= 8, "Width must be at least 8"
+        assert params.height >= 8, "Height must be at least 8"
+
+        # call shadow skill
+        result_shadow = await ctx.call_async.shadow(
+            state_id=params.cutout,
+            resolution=(params.width, params.height),
+            bbox=params.bbox,
+            seed=params.seed,
+        )
+        if isinstance(result_shadow, ErrorResult):
+            raise ValueError(f"Failed to create shadow: {result_shadow.error}")
+        stateid_shadow = result_shadow.state_id
+
+        if params.bgcolor != "transparent":
+            # call set_background_color skill
+            result_bgcolor = await ctx.call_async.set_background_color(
+                state_id=stateid_shadow,
+                background=params.bgcolor,
+            )
+            if isinstance(result_bgcolor, ErrorResult):
+                raise ValueError(f"Failed to set background color: {result_bgcolor.error}")
+            stateid_shadow = result_bgcolor.state_id
+
+        return stateid_shadow
+
     def process(
         self,
         cutout: StateID,
@@ -121,7 +124,7 @@ class Shadow:
     ) -> tuple[StateID]:
         return (
             _get_ctx().run_one_sync(
-                co=_process,
+                co=self._process,
                 params=Params(
                     cutout=cutout,
                     width=width,

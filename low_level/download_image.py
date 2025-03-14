@@ -14,19 +14,6 @@ class Params:
     resolution: Literal["FULL", "DISPLAY"]
 
 
-async def _process(
-    ctx: EditorAPIContext,
-    params: Params,
-) -> torch.Tensor:
-    # download the image from the API
-    pil_image = await ctx.call_async.download_pil_image(params.image)
-
-    # convert to tensor
-    tensor_image = image_to_tensor(pil_image).permute(0, 2, 3, 1)
-
-    return tensor_image
-
-
 class DownloadImage:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
@@ -63,6 +50,19 @@ class DownloadImage:
     CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
 
+    @staticmethod
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> torch.Tensor:
+        # download the image from the API
+        pil_image = await ctx.call_async.download_pil_image(params.image)
+
+        # convert to tensor
+        tensor_image = image_to_tensor(pil_image).permute(0, 2, 3, 1)
+
+        return tensor_image
+
     def process(
         self,
         image: StateID,
@@ -71,7 +71,7 @@ class DownloadImage:
     ) -> tuple[torch.Tensor]:
         return (
             _get_ctx().run_one_sync(
-                co=_process,
+                co=self._process,
                 params=Params(
                     image=image,
                     image_format=image_format,

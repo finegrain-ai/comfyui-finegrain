@@ -12,27 +12,6 @@ class Params:
     seed: int
 
 
-async def _process(
-    ctx: EditorAPIContext,
-    params: Params,
-) -> StateID:
-    assert params.mode in get_args(Mode), f"Mode must be one of {get_args(Mode)}"
-    assert params.seed >= 0, "Seed must be a non-negative integer"
-
-    # call erase skill
-    result_erase = await ctx.call_async.erase(
-        image_state_id=params.image,
-        mask_state_id=params.mask,
-        mode=params.mode,
-        seed=params.seed,
-    )
-    if isinstance(result_erase, ErrorResult):
-        raise ValueError(f"Failed to erase object: {result_erase.error}")
-    stateid_erase = result_erase.state_id
-
-    return stateid_erase
-
-
 class Eraser:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
@@ -77,6 +56,27 @@ class Eraser:
     CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
 
+    @staticmethod
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> StateID:
+        assert params.mode in get_args(Mode), f"Mode must be one of {get_args(Mode)}"
+        assert params.seed >= 0, "Seed must be a non-negative integer"
+
+        # call erase skill
+        result_erase = await ctx.call_async.erase(
+            image_state_id=params.image,
+            mask_state_id=params.mask,
+            mode=params.mode,
+            seed=params.seed,
+        )
+        if isinstance(result_erase, ErrorResult):
+            raise ValueError(f"Failed to erase object: {result_erase.error}")
+        stateid_erase = result_erase.state_id
+
+        return stateid_erase
+
     def process(
         self,
         image: StateID,
@@ -86,7 +86,7 @@ class Eraser:
     ) -> tuple[StateID]:
         return (
             _get_ctx().run_one_sync(
-                co=_process,
+                co=self._process,
                 params=Params(
                     image=image,
                     mask=mask,

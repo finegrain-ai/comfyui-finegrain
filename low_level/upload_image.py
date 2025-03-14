@@ -12,22 +12,6 @@ class Params:
     image: torch.Tensor
 
 
-async def _process(
-    ctx: EditorAPIContext,
-    params: Params,
-) -> StateID:
-    # convert tensors to PIL images
-    pil_image = tensor_to_image(params.image.permute(0, 3, 1, 2))
-
-    # make some assertions
-    assert pil_image.mode in ["RGB", "RGBA"], "Image must be RGB or RGBA"
-
-    # upload the image to the API
-    stateid_image = await ctx.call_async.upload_pil_image(pil_image)
-
-    return stateid_image
-
-
 class UploadImage:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
@@ -50,13 +34,29 @@ class UploadImage:
     CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
 
+    @staticmethod
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> StateID:
+        # convert tensors to PIL images
+        pil_image = tensor_to_image(params.image.permute(0, 3, 1, 2))
+
+        # make some assertions
+        assert pil_image.mode in ["RGB", "RGBA"], "Image must be RGB or RGBA"
+
+        # upload the image to the API
+        stateid_image = await ctx.call_async.upload_pil_image(pil_image)
+
+        return stateid_image
+
     def process(
         self,
         image: torch.Tensor,
     ) -> tuple[StateID]:
         return (
             _get_ctx().run_one_sync(
-                co=_process,
+                co=self._process,
                 params=Params(image=image),
             ),
         )

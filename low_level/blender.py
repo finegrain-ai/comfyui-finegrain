@@ -16,28 +16,6 @@ class Params:
     seed: int
 
 
-async def _process(ctx: EditorAPIContext, params: Params) -> StateID:
-    assert params.mode in get_args(Mode), f"Mode must be one of {get_args(Mode)}"
-    assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
-    assert -360 <= params.rotation_angle <= 360, "Rotation angle must be between -360 and 360"
-
-    # call blend skill
-    result_erase = await ctx.call_async.blend(
-        image_state_id=params.scene,
-        mask_state_id=params.cutout,
-        bbox=params.bbox,
-        flip=params.flip,
-        rotation_angle=params.rotation_angle,
-        mode=params.mode,
-        seed=params.seed,
-    )
-    if isinstance(result_erase, ErrorResult):
-        raise ValueError(f"Failed to blend object: {result_erase.error}")
-    stateid_erase = result_erase.state_id
-
-    return stateid_erase
-
-
 class Blender:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
@@ -103,6 +81,31 @@ class Blender:
     CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
 
+    @staticmethod
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> StateID:
+        assert params.mode in get_args(Mode), f"Mode must be one of {get_args(Mode)}"
+        assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
+        assert -360 <= params.rotation_angle <= 360, "Rotation angle must be between -360 and 360"
+
+        # call blend skill
+        result_erase = await ctx.call_async.blend(
+            image_state_id=params.scene,
+            mask_state_id=params.cutout,
+            bbox=params.bbox,
+            flip=params.flip,
+            rotation_angle=params.rotation_angle,
+            mode=params.mode,
+            seed=params.seed,
+        )
+        if isinstance(result_erase, ErrorResult):
+            raise ValueError(f"Failed to blend object: {result_erase.error}")
+        stateid_erase = result_erase.state_id
+
+        return stateid_erase
+
     def process(
         self,
         scene: StateID,
@@ -115,7 +118,7 @@ class Blender:
     ) -> tuple[StateID]:
         return (
             _get_ctx().run_one_sync(
-                co=_process,
+                co=self._process,
                 params=Params(
                     scene=scene,
                     cutout=cutout,

@@ -11,20 +11,6 @@ class Params:
     color: str
 
 
-async def _process(ctx: EditorAPIContext, params: Params) -> StateID:
-    # call recolor skill
-    result_recolor = await ctx.call_async.recolor(
-        image_state_id=params.image,
-        mask_state_id=params.mask,
-        color=params.color,
-    )
-    if isinstance(result_recolor, ErrorResult):
-        raise ValueError(f"Failed to recolor object: {result_recolor.error}")
-    stateid_recolor = result_recolor.state_id
-
-    return stateid_recolor
-
-
 class Recolor:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
@@ -60,6 +46,23 @@ class Recolor:
     CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
 
+    @staticmethod
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> StateID:
+        # call recolor skill
+        result_recolor = await ctx.call_async.recolor(
+            image_state_id=params.image,
+            mask_state_id=params.mask,
+            color=params.color,
+        )
+        if isinstance(result_recolor, ErrorResult):
+            raise ValueError(f"Failed to recolor object: {result_recolor.error}")
+        stateid_recolor = result_recolor.state_id
+
+        return stateid_recolor
+
     def process(
         self,
         image: StateID,
@@ -68,7 +71,7 @@ class Recolor:
     ) -> tuple[StateID]:
         return (
             _get_ctx().run_one_sync(
-                co=_process,
+                co=self._process,
                 params=Params(
                     image=image,
                     mask=mask,

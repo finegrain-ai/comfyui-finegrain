@@ -85,7 +85,10 @@ class Shadow:
     FUNCTION = "process"
 
     @staticmethod
-    async def _process(ctx: EditorAPIContext, params: Params) -> torch.Tensor:
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> torch.Tensor:
         assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
         assert params.width >= 8, "Width must be at least 8"
         assert params.height >= 8, "Height must be at least 8"

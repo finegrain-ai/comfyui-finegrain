@@ -50,7 +50,10 @@ class Recolor:
     FUNCTION = "process"
 
     @staticmethod
-    async def _process(ctx: EditorAPIContext, params: Params) -> torch.Tensor:
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> torch.Tensor:
         # convert tensors to PIL images
         pil_image = tensor_to_image(params.image.permute(0, 3, 1, 2))
         pil_mask = tensor_to_image(params.mask.unsqueeze(0))

@@ -11,24 +11,6 @@ class Params:
     prompt: str
 
 
-async def _process(
-    ctx: EditorAPIContext,
-    params: Params,
-) -> BoundingBox:
-    assert params.prompt, "Prompt must not be empty"
-
-    # call infer-bbox skill
-    result_bbox = await ctx.call_async.infer_bbox(
-        state_id=params.stateid_image,
-        product_name=params.prompt,
-    )
-    if isinstance(result_bbox, ErrorResult):
-        raise ValueError(f"Failed to infer bounding box: {result_bbox.error}")
-    bbox = result_bbox.bbox
-
-    return bbox
-
-
 class Box:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
@@ -57,6 +39,24 @@ class Box:
     CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
 
+    @staticmethod
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> BoundingBox:
+        assert params.prompt, "Prompt must not be empty"
+
+        # call infer-bbox skill
+        result_bbox = await ctx.call_async.infer_bbox(
+            state_id=params.stateid_image,
+            product_name=params.prompt,
+        )
+        if isinstance(result_bbox, ErrorResult):
+            raise ValueError(f"Failed to infer bounding box: {result_bbox.error}")
+        bbox = result_bbox.bbox
+
+        return bbox
+
     def process(
         self,
         image: StateID,
@@ -64,7 +64,7 @@ class Box:
     ) -> tuple[BoundingBox]:
         return (
             _get_ctx().run_one_sync(
-                co=_process,
+                co=self._process,
                 params=Params(
                     stateid_image=image,
                     prompt=prompt,
