@@ -16,7 +16,7 @@ async def _process(
     ctx: EditorAPIContext,
     params: Params,
 ) -> torch.Tensor:
-    # queue state/create
+    # download the image from the API
     mask_pil = await ctx.call_async.download_image(params.mask)
 
     # convert to tensor

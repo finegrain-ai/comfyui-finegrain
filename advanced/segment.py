@@ -25,8 +25,8 @@ async def _process(
         raise ValueError(f"Failed to segment object: {result_segment.error}")
     stateid_segment = result_segment.state_id
 
-    # queue skills/crop
     if params.cropped:
+        # call crop skill
         result_segment = await ctx.call_async.crop(
             state_id=stateid_segment,
             bbox=params.bbox,

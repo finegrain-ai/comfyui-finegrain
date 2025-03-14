@@ -28,7 +28,7 @@ async def _process(
     # convert PIL images to BytesIO
     image_bytes = image_to_bytes(image_pil)
 
-    # queue state/create
+    # upload the image to the API
     stateid_image = await ctx.call_async.upload_image(file=image_bytes)
 
     return stateid_image

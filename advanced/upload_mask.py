@@ -28,7 +28,7 @@ async def _process(
     # convert PIL images to BytesIO
     mask_bytes = image_to_bytes(mask_pil)
 
-    # queue state/create
+    # upload the mask to the API
     stateid_mask = await ctx.call_async.upload_image(file=mask_bytes)
 
     return stateid_mask

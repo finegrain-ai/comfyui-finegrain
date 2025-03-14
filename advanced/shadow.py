@@ -20,7 +20,7 @@ async def _process(ctx: EditorAPIContext, params: Params) -> StateID:
     assert params.width >= 8, "Width must be at least 8"
     assert params.height >= 8, "Height must be at least 8"
 
-    # queue skills/shadow
+    # call shadow skill
     result_shadow = await ctx.call_async.shadow(
         state_id=params.cutout,
         resolution=(params.width, params.height),
@@ -31,8 +31,8 @@ async def _process(ctx: EditorAPIContext, params: Params) -> StateID:
         raise ValueError(f"Failed to create shadow: {result_shadow.error}")
     stateid_shadow = result_shadow.state_id
 
-    # queue skills/set-background-color
     if params.bgcolor and params.bgcolor != "transparent":
+        # call set_background_color skill
         result_bgcolor = await ctx.call_async.set_background_color(
             state_id=stateid_shadow,
             background=params.bgcolor,
