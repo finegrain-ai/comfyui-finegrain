@@ -47,7 +47,7 @@ class UploadMask:
 
     TITLE = "[Low level] Upload Mask"
     DESCRIPTION = "Create a new state id from a mask."
-    CATEGORY = "Finegrain/advanced"
+    CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
 
     def process(

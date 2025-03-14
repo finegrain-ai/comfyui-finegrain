@@ -44,7 +44,7 @@ class DownloadMask:
 
     TITLE = "[Low level] Download Mask"
     DESCRIPTION = "Download an image from a state id."
-    CATEGORY = "Finegrain/advanced"
+    CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
 
     def process(

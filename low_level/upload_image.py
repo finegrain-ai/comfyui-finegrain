@@ -47,7 +47,7 @@ class UploadImage:
 
     TITLE = "[Low level] Upload Image"
     DESCRIPTION = "Create a new state id from an image."
-    CATEGORY = "Finegrain/advanced"
+    CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
 
     def process(
