@@ -108,6 +108,7 @@ class Shadow:
             resolution=(params.width, params.height),
             bbox=params.bbox,
             seed=params.seed,
+            background="transparent",
         )
         if isinstance(result_shadow, ErrorResult):
             raise ValueError(f"Failed to create shadow: {result_shadow.error}")

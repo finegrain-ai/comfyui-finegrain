@@ -10,13 +10,17 @@ To use these custom nodes, you need Finegrain API credentials:
 
 ![finegrain login](assets/finegrain_login.webp)
 
-2. Use your **username** (email) and **password** in the `Finegrain API` node:
+2. Modify [`config.ini`](config.ini) with your Finegrain API credentials:
 
-![node login](assets/node_login.webp)
+```ini
+[finegrain]
+credentials = myemail@email.com:my_password
+priority = low
+timeout = 60
+```
 
 > [!Note]
-> Behind the scenes, authentication is handled by the [Finegrain Python client](https://github.com/finegrain-ai/finegrain-python/),
-> so you don't need to manage [API tokens](https://api.finegrain.ai/doc/authentication/) manually.
+> `credentials` can either be `email:password` or an API key.
 
 ## Installation
 
@@ -96,7 +100,8 @@ On Windows:
 ## Workflow examples
 
 > [!Note]
-> All the below workflow examples were made using comfyui-finegrain v1.0.0.
+> All the below workflow examples were made using comfyui-finegrain v2.0.0. <br>
+> To import them into ComfyUI, drag and drop the .png file into the ComfyUI window.
 
 All our workflows are also available on OpenArt: https://openart.ai/workflows/profile/finegrain
 
@@ -104,54 +109,40 @@ All our workflows are also available on OpenArt: https://openart.ai/workflows/pr
 
 Instantly remove any object, along with its shadows and reflections, just by naming it.
 
-![Prompt to erase workflow](assets/workflows/erase.webp?raw=true)
-
-[Download the Prompt to erase workflow](assets/workflows/erase.json)
+![Prompt to erase workflow](assets/workflows/erase.png?raw=true)
 
 ### Prompt to cutout
 
 Instantly isolate any object in a photo into a perfect cutout, just by naming it.
 
-![Prompt to cutout workflow](assets/workflows/cutout.webp?raw=true)
-
-[Download the Prompt to cutout workflow](assets/workflows/cutout.json)
+![Prompt to cutout workflow](assets/workflows/cutout.png?raw=true)
 
 ### Prompt to recolor
 
 Instantly change the color of any object in a photo, even through occlusions, just by naming it.
 
-![Prompt to recolor workflow](assets/workflows/recolor.webp?raw=true)
-
-[Download the Prompt to recolor workflow](assets/workflows/recolor.json)
+![Prompt to recolor workflow](assets/workflows/recolor.png?raw=true)
 
 ### Swap
 
 Replace any object in a photo with another, recreating shadows and reflections so naturally it looks like the new object was always there — perfectly preserved in every detail.
 
-![Swap workflow](assets/workflows/swap.webp?raw=true)
-
-[Download the Swap workflow](assets/workflows/swap.json)
+![Swap workflow](assets/workflows/swap.png?raw=true)
 
 ### Blend
 
 Seamlessly integrate any object into a scene, recreating shadows and reflections for a result so natural it looks like it was always there — perfectly preserved in every detail.
 
-![Blend workflow](assets/workflows/blend.webp?raw=true)
-
-[Download the Blend workflow](assets/workflows/blend.json)
+![Blend workflow](assets/workflows/blend.png?raw=true)
 
 ### Generate packshot
 
 Generate Packshot – Transform any mundane photo into a stunning white-background image with a perfectly natural shadow.
 
-![Generate packshot workflow](assets/workflows/packshot.webp?raw=true)
-
-[Download the Generate packshot workflow](assets/workflows/packshot.json)
+![Generate packshot workflow](assets/workflows/packshot.png?raw=true)
 
 ### Remove background
 
 Remove Background – Our pixel-perfect, high-resolution take on a classic, effortlessly extracting the main object from its background.
 
-![Remove background workflow](assets/workflows/removebg.webp?raw=true)
-
-[Download the Remove background workflow](assets/workflows/removebg.json)
+![Remove background workflow](assets/workflows/removebg.png?raw=true)
