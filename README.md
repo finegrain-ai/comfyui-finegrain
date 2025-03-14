@@ -109,7 +109,7 @@ All our workflows are also available on OpenArt: https://openart.ai/workflows/pr
 
 Instantly remove any object, along with its shadows and reflections, just by naming it.
 
-![Prompt to erase workflow](assets/workflows/erase.png?raw=true)
+![Prompt to erase workflow](assets/workflows/eraser.png?raw=true)
 
 ### Prompt to cutout
 
@@ -133,7 +133,7 @@ Replace any object in a photo with another, recreating shadows and reflections s
 
 Seamlessly integrate any object into a scene, recreating shadows and reflections for a result so natural it looks like it was always there — perfectly preserved in every detail.
 
-![Blend workflow](assets/workflows/blend.png?raw=true)
+![Blend workflow](assets/workflows/blender.png?raw=true)
 
 ### Generate packshot
 
