@@ -20,7 +20,7 @@ timeout = 60
 ```
 
 > [!Note]
-> `credentials` can either be `email:password` or an API key.
+> `credentials` can either be `email:password` or an API key, which you can create in Account Settings > New API key
 
 ## Installation
 
