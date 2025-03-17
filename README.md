@@ -10,7 +10,7 @@ To use these custom nodes, you need Finegrain API credentials:
 
 ![finegrain login](assets/finegrain_login.webp)
 
-2. Modify [`config.ini`](config.ini) with your Finegrain API credentials:
+2. Once installed (see [below](#installation)), update [`config.ini`](config.ini) with your Finegrain API credentials:
 
 ```ini
 [finegrain]
