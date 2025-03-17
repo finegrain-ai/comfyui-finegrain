@@ -3,9 +3,8 @@ from typing import Any
 import torch
 from PIL import ImageDraw
 
+from .context import BoundingBox
 from .image import image_to_tensor, tensor_to_image
-
-BoundingBox = tuple[int, int, int, int]
 
 
 class CreateBoundingBox:

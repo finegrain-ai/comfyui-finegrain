@@ -10,13 +10,17 @@ To use these custom nodes, you need Finegrain API credentials:
 
 ![finegrain login](assets/finegrain_login.webp)
 
-2. Use your **username** (email) and **password** in the `Finegrain API` node:
+2. Once installed (see [below](#installation)), update [`config.ini`](config.ini) with your Finegrain API credentials:
 
-![node login](assets/node_login.webp)
+```ini
+[finegrain]
+credentials = myemail@email.com:my_password
+priority = low
+timeout = 60
+```
 
 > [!Note]
-> Behind the scenes, authentication is handled by the [Finegrain Python client](https://github.com/finegrain-ai/finegrain-python/),
-> so you don't need to manage [API tokens](https://api.finegrain.ai/doc/authentication/) manually.
+> `credentials` can either be `email:password` or an API key, which you can create in Account Settings > New API key
 
 ## Installation
 
@@ -24,9 +28,11 @@ Installing the nodes is pretty straight forward, check out our [Discord server](
 
 ### Requirements
 
-1. Ensure you have **[Python](https://www.python.org/) 3.12** (or later) installed.
+1. Ensure you have [Python](https://www.python.org/) 3.12 (or later) installed.
 
 2. Ensure you have [Git](https://git-scm.com/) installed.
+
+3. Ensure you have [ComfyUI](https://github.com/comfyanonymous/ComfyUI) installed.
 
 ### ComfyUI Manager installation (recommended)
 
@@ -64,7 +70,6 @@ pip install -r custom_nodes/comfyui-finegrain/requirements.txt
 
 On Windows:
 ```shell
-.\python_embeded\Scripts\pip.exe install hatchling
 .\python_embeded\Scripts\pip.exe install -r .\ComfyUI\custom_nodes\comfyui-finegrain\requirements.txt
 ```
 
@@ -89,14 +94,14 @@ pip install -r custom_nodes/comfyui-finegrain/requirements.txt
 
 On Windows:
 ```shell
-.\python_embeded\Scripts\pip.exe install hatchling
 .\python_embeded\Scripts\pip.exe install -r .\ComfyUI\custom_nodes\comfyui-finegrain\requirements.txt
 ```
 
 ## Workflow examples
 
 > [!Note]
-> All the below workflow examples were made using comfyui-finegrain v1.0.0.
+> All the below workflow examples were made using comfyui-finegrain v2.0.0. <br>
+> To import them into ComfyUI, drag and drop the .png file into the ComfyUI window.
 
 All our workflows are also available on OpenArt: https://openart.ai/workflows/profile/finegrain
 
@@ -104,54 +109,40 @@ All our workflows are also available on OpenArt: https://openart.ai/workflows/pr
 
 Instantly remove any object, along with its shadows and reflections, just by naming it.
 
-![Prompt to erase workflow](assets/workflows/erase.webp?raw=true)
-
-[Download the Prompt to erase workflow](assets/workflows/erase.json)
+![Prompt to erase workflow](assets/workflows/eraser.png?raw=true)
 
 ### Prompt to cutout
 
 Instantly isolate any object in a photo into a perfect cutout, just by naming it.
 
-![Prompt to cutout workflow](assets/workflows/cutout.webp?raw=true)
-
-[Download the Prompt to cutout workflow](assets/workflows/cutout.json)
+![Prompt to cutout workflow](assets/workflows/cutout.png?raw=true)
 
 ### Prompt to recolor
 
 Instantly change the color of any object in a photo, even through occlusions, just by naming it.
 
-![Prompt to recolor workflow](assets/workflows/recolor.webp?raw=true)
-
-[Download the Prompt to recolor workflow](assets/workflows/recolor.json)
+![Prompt to recolor workflow](assets/workflows/recolor.png?raw=true)
 
 ### Swap
 
 Replace any object in a photo with another, recreating shadows and reflections so naturally it looks like the new object was always there — perfectly preserved in every detail.
 
-![Swap workflow](assets/workflows/swap.webp?raw=true)
-
-[Download the Swap workflow](assets/workflows/swap.json)
+![Swap workflow](assets/workflows/swap.png?raw=true)
 
 ### Blend
 
 Seamlessly integrate any object into a scene, recreating shadows and reflections for a result so natural it looks like it was always there — perfectly preserved in every detail.
 
-![Blend workflow](assets/workflows/blend.webp?raw=true)
-
-[Download the Blend workflow](assets/workflows/blend.json)
+![Blend workflow](assets/workflows/blender.png?raw=true)
 
 ### Generate packshot
 
 Generate Packshot – Transform any mundane photo into a stunning white-background image with a perfectly natural shadow.
 
-![Generate packshot workflow](assets/workflows/packshot.webp?raw=true)
-
-[Download the Generate packshot workflow](assets/workflows/packshot.json)
+![Generate packshot workflow](assets/workflows/packshot.png?raw=true)
 
 ### Remove background
 
 Remove Background – Our pixel-perfect, high-resolution take on a classic, effortlessly extracting the main object from its background.
 
-![Remove background workflow](assets/workflows/removebg.webp?raw=true)
-
-[Download the Remove background workflow](assets/workflows/removebg.json)
+![Remove background workflow](assets/workflows/removebg.png?raw=true)

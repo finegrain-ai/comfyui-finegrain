@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from ..utils.context import EditorAPIContext, StateID
+from ..utils.context import EditorAPIContext, ErrorResult, StateID, _get_ctx
 
 
 @dataclass(kw_only=True)
@@ -11,28 +11,11 @@ class Params:
     color: str
 
 
-async def _process(ctx: EditorAPIContext, params: Params) -> StateID:
-    # queue skills/shadow
-    stateid_recolor = await ctx.skill_recolor(
-        stateid_image=params.image,
-        stateid_mask=params.mask,
-        color=params.color,
-    )
-
-    return stateid_recolor
-
-
-class AdvancedRecolor:
+class Recolor:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
             "required": {
-                "api": (
-                    "FG_API",
-                    {
-                        "tooltip": "The Finegrain API context",
-                    },
-                ),
                 "image": (
                     "STATEID",
                     {
@@ -58,21 +41,37 @@ class AdvancedRecolor:
     RETURN_TYPES = ("STATEID",)
     RETURN_NAMES = ("image",)
 
-    TITLE = "[Advanced] Recolor"
+    TITLE = "[Low level] Recolor"
     DESCRIPTION = "Recolor a masked object in an image."
-    CATEGORY = "Finegrain/skills"
+    CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
+
+    @staticmethod
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> StateID:
+        # call recolor skill
+        result_recolor = await ctx.call_async.recolor(
+            image_state_id=params.image,
+            mask_state_id=params.mask,
+            color=params.color,
+        )
+        if isinstance(result_recolor, ErrorResult):
+            raise ValueError(f"Failed to recolor object: {result_recolor.error}")
+        stateid_recolor = result_recolor.state_id
+
+        return stateid_recolor
 
     def process(
         self,
-        api: EditorAPIContext,
         image: StateID,
         mask: StateID,
         color: str,
     ) -> tuple[StateID]:
         return (
-            api.run_one_sync(
-                co=_process,
+            _get_ctx().run_one_sync(
+                co=self._process,
                 params=Params(
                     image=image,
                     mask=mask,

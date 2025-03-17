@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..utils.bbox import BoundingBox
-from ..utils.context import EditorAPIContext, StateID
+from ..utils.context import EditorAPIContext, ErrorResult, StateID, _get_ctx
 
 
 @dataclass(kw_only=True)
@@ -11,44 +11,15 @@ class Params:
     width: int
     height: int
     seed: int
-    bgcolor: str | None
+    bgcolor: str
     bbox: BoundingBox | None
 
 
-async def _process(ctx: EditorAPIContext, params: Params) -> StateID:
-    assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
-    assert params.width >= 8, "Width must be at least 8"
-    assert params.height >= 8, "Height must be at least 8"
-
-    # queue skills/shadow
-    stateid_shadow = await ctx.skill_shadow(
-        stateid_cutout=params.cutout,
-        resolution=(params.width, params.height),
-        bbox=params.bbox,
-        seed=params.seed,
-    )
-
-    # queue skills/set-background-color
-    if params.bgcolor and params.bgcolor != "transparent":
-        stateid_shadow = await ctx.skill_set_bgcolor(
-            stateid_image=stateid_shadow,
-            color=params.bgcolor,
-        )
-
-    return stateid_shadow
-
-
-class AdvancedShadow:
+class Shadow:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, Any]:
         return {
             "required": {
-                "api": (
-                    "FG_API",
-                    {
-                        "tooltip": "The Finegrain API context",
-                    },
-                ),
                 "cutout": (
                     "STATEID",
                     {
@@ -84,8 +55,6 @@ class AdvancedShadow:
                         "tooltip": "Seed for the random number generator.",
                     },
                 ),
-            },
-            "optional": {
                 "bgcolor": (
                     "STRING",
                     {
@@ -93,6 +62,8 @@ class AdvancedShadow:
                         "tooltip": "Background color of the shadow.",
                     },
                 ),
+            },
+            "optional": {
                 "bbox": (
                     "BBOX",
                     {
@@ -105,24 +76,56 @@ class AdvancedShadow:
     RETURN_TYPES = ("STATEID",)
     RETURN_NAMES = ("image",)
 
-    TITLE = "[Advanced] Shadow"
+    TITLE = "[Low level] Shadow"
     DESCRIPTION = "Create a shadow packshot from a cutout."
-    CATEGORY = "Finegrain/skills"
+    CATEGORY = "Finegrain/low-level"
     FUNCTION = "process"
+
+    @staticmethod
+    async def _process(
+        ctx: EditorAPIContext,
+        params: Params,
+    ) -> StateID:
+        assert 0 <= params.seed <= 999, "Seed must be an integer between 0 and 999"
+        assert params.width >= 8, "Width must be at least 8"
+        assert params.height >= 8, "Height must be at least 8"
+
+        # call shadow skill
+        result_shadow = await ctx.call_async.shadow(
+            state_id=params.cutout,
+            resolution=(params.width, params.height),
+            bbox=params.bbox,
+            seed=params.seed,
+            background="transparent",
+        )
+        if isinstance(result_shadow, ErrorResult):
+            raise ValueError(f"Failed to create shadow: {result_shadow.error}")
+        stateid_shadow = result_shadow.state_id
+
+        if params.bgcolor != "transparent":
+            # call set_background_color skill
+            result_bgcolor = await ctx.call_async.set_background_color(
+                state_id=stateid_shadow,
+                background=params.bgcolor,
+            )
+            if isinstance(result_bgcolor, ErrorResult):
+                raise ValueError(f"Failed to set background color: {result_bgcolor.error}")
+            stateid_shadow = result_bgcolor.state_id
+
+        return stateid_shadow
 
     def process(
         self,
-        api: EditorAPIContext,
         cutout: StateID,
         width: int,
         height: int,
         seed: int,
-        bgcolor: str | None = None,
+        bgcolor: str,
         bbox: BoundingBox | None = None,
     ) -> tuple[StateID]:
         return (
-            api.run_one_sync(
-                co=_process,
+            _get_ctx().run_one_sync(
+                co=self._process,
                 params=Params(
                     cutout=cutout,
                     width=width,
