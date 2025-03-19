@@ -26,7 +26,7 @@ PublisherId = "finegrain"
 dev-dependencies = [
     "numpy>=2.2.3",
     "pyright>=1.1.396",
-    "ruff>=0.10.0",
+    "ruff>=0.11.0",
     "torch>=2.6.0",
     "typos>=1.30.2",
 ]
@@ -48,14 +48,19 @@ target-version = "py312"
 
 [tool.ruff.lint]
 ignore = [
-    "C901",  # is too complex
-    "E731",  # do-not-assign-lambda
-    "EM101", # exception must not use a string literal
-    "EM102", # f-string literal in exception message
-    "G004",  # f-string literal in logging message
-    "N812",  # imported as non-lowercase
-    "S101",  # use of assert
-    "S311",  # non secure cryptographic random
+    "C901",   # is too complex
+    "E731",   # do-not-assign-lambda
+    "EM101",  # exception must not use a string literal
+    "EM102",  # f-string literal in exception message
+    "G004",   # f-string literal in logging message
+    "N802",   # function name  should be lowercase
+    "N812",   # imported as non-lowercase
+    "N818",   # exception should have Error suffix
+    "N999",   # invalid module name
+    "S101",   # use of assert
+    "S113",   # use of network call with explicit timeout
+    "S311",   # non secure cryptographic random
+    "TID252", # prefer absolute imports over relative imports
 ]
 select = [
     "A",   # flake8-builtins
