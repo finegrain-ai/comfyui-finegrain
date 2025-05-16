@@ -6,7 +6,7 @@
 
 To use these custom nodes, you need Finegrain API credentials:
 
-1. Sign up for an account at https://editor.finegrain.ai/signup:
+1. Sign up for an account at https://account.finegrain.ai/sign-up:
 
 ![finegrain login](assets/finegrain_login.webp)
 
@@ -20,7 +20,7 @@ timeout = 60
 ```
 
 > [!Note]
-> `credentials` can either be `email:password` or an API key, which you can create in Account Settings > New API key
+> `credentials` can either be `email:password` or an API key, which you can create in User Account > API Keys > New API key
 
 ## Installation
 
