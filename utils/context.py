@@ -732,14 +732,6 @@ class BlendResultWithImage(OKResultWithImage, BlendResult):
     pass
 
 
-class UpscaleResult(OKResultWithUsedSeeds):
-    pass
-
-
-class UpscaleResultWithImage(OKResultWithImage, UpscaleResult):
-    pass
-
-
 class ShadowResult(OKResultWithUsedSeeds):
     @property
     def input_bbox(self) -> BoundingBox | None:
@@ -1001,33 +993,6 @@ class EditorApiAsyncClient:
             image_params = None if isinstance(with_image, bool) else with_image
             return await self._response_with_image(st, ok, BlendResultWithImage, params=image_params)
         return await self._response(st, ok, BlendResult)
-
-    async def upscale(
-        self,
-        state_id: StateID,
-        preprocess: bool = True,
-        scale_factor: Literal[1, 2, 4] = 2,
-        resemblance: float | None = None,
-        decay: float | None = None,
-        creativity: float | None = None,
-        seed: int | None = None,
-        with_image: bool | ImageOutParams = False,
-        timeout: float | None = None,
-    ) -> UpscaleResult | ErrorResult:
-        params: dict[str, Any] = {"preprocess": preprocess, "scale_factor": scale_factor}
-        if resemblance is not None:
-            params["resemblance"] = resemblance
-        if decay is not None:
-            params["decay"] = decay
-        if creativity is not None:
-            params["creativity"] = creativity
-        if seed is not None:
-            params["seed"] = seed
-        st, ok = await self.ctx.call_skill(f"upscale/{state_id}", params, timeout=timeout)
-        if with_image:
-            image_params = None if isinstance(with_image, bool) else with_image
-            return await self._response_with_image(st, ok, UpscaleResultWithImage, params=image_params)
-        return await self._response(st, ok, UpscaleResult)
 
     async def shadow(
         self,
