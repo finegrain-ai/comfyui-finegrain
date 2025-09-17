@@ -3,7 +3,6 @@ from typing import Any
 from .high_level.blender import Blender as HighLevelBlender
 from .high_level.box import Box as HighLevelBox
 from .high_level.eraser import Eraser as HighLevelEraser
-from .high_level.name import InferMainSubject as HighLevelInferMainSubject
 from .high_level.recolor import Recolor as HighLevelRecolor
 from .high_level.segment import Segment as HighLevelSegment
 from .high_level.shadow import Shadow as HighLevelShadow
@@ -38,7 +37,6 @@ NODE_CLASS_MAPPINGS: dict[str, Any] = {
         HighLevelBlender,
         HighLevelBox,
         HighLevelEraser,
-        HighLevelInferMainSubject,
         HighLevelRecolor,
         HighLevelSegment,
         HighLevelShadow,

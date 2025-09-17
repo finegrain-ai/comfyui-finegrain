@@ -590,7 +590,7 @@ CreateStateErrorCode = Literal["file_too_large", "download_error", "invalid_imag
 Trinary = Literal["yes", "no", "unknown"]
 Size2D = tuple[int, int]
 BoundingBox = tuple[int, int, int, int]
-Mode = Literal["express", "standard", "premium"]
+Mode = Literal["express", "standard"]
 
 
 def _size2d(v: Any) -> Size2D:
@@ -675,38 +675,6 @@ class CreateStateError(ErrorResult):
     def error_code(self) -> CreateStateErrorCode:
         v = self.meta["error_code"]
         assert v in get_args(CreateStateErrorCode)
-        return v
-
-
-class InferIsProductResult(OKResult):
-    @property
-    def is_product(self) -> Trinary:
-        v = self.meta["is_product"]
-        assert v in get_args(Trinary)
-        return v
-
-
-class InferProductNameResult(OKResult):
-    @property
-    def is_product(self) -> str:
-        v = self.meta["product_name"]
-        assert isinstance(v, str)
-        return v
-
-
-class InferMainSubjectResult(OKResult):
-    @property
-    def main_subject(self) -> str:
-        v = self.meta["main_subject"]
-        assert isinstance(v, str)
-        return v
-
-
-class InferCommercialDescriptionResult(OKResult):
-    @property
-    def commercial_description_en(self) -> str:
-        v = self.meta["commercial_description_en"]
-        assert isinstance(v, str)
         return v
 
 
@@ -948,46 +916,6 @@ class EditorApiAsyncClient:
     ) -> CreateStateResult | CreateStateError:
         st, ok = await self._create_state(file, file_url, meta, timeout)
         return await self._response(st, ok, CreateStateResult, CreateStateError)
-
-    async def infer_is_product(
-        self,
-        state_id: StateID,
-        timeout: float | None = None,
-    ) -> InferIsProductResult | ErrorResult:
-        st, ok = await self.ctx.call_skill(f"infer-is-product/{state_id}", timeout=timeout)
-        return await self._response(st, ok, InferIsProductResult)
-
-    async def infer_product_name(
-        self,
-        state_id: StateID,
-        timeout: float | None = None,
-    ) -> InferProductNameResult | ErrorResult:
-        st, ok = await self.ctx.call_skill(f"infer-product-name/{state_id}", timeout=timeout)
-        return await self._response(st, ok, InferProductNameResult)
-
-    async def infer_main_subject(
-        self,
-        state_id: StateID,
-        timeout: float | None = None,
-    ) -> InferMainSubjectResult | ErrorResult:
-        st, ok = await self.ctx.call_skill(f"infer-main-subject/{state_id}", timeout=timeout)
-        return await self._response(st, ok, InferMainSubjectResult)
-
-    async def infer_commercial_description(
-        self,
-        state_id: StateID,
-        product_name: str | None = None,
-        timeout: float | None = None,
-    ) -> InferCommercialDescriptionResult | ErrorResult:
-        params: dict[str, Any] = {}
-        if product_name is not None:
-            params["product_name"] = product_name
-        st, ok = await self.ctx.call_skill(
-            f"infer-commercial-description/{state_id}",
-            params,
-            timeout=timeout,
-        )
-        return await self._response(st, ok, InferCommercialDescriptionResult)
 
     async def infer_bbox(
         self,

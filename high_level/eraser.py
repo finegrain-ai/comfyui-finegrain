@@ -34,7 +34,6 @@ class Eraser:
                 ),
                 "mode": (
                     [
-                        "premium",
                         "standard",
                         "express",
                     ],
